@@ -15,7 +15,37 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
         private readonly Mock<IAltinnGatewayClient> _clientMock = new();
 
         [Fact]
-        public async Task SendAsync_GatewayReturnsNonSuccess_ErrorResponseReturned()
+        public async Task SendAsync_GatewayReturnsNonSuccess_UnknownError()
+        {
+
+            // Arrange
+            var gatewayResult = new MessageResult(null, false, "This is an unknown error message", null);
+
+            _clientMock.Setup(cm => cm.SendAsync(It.IsAny<LinkMobilityModel.Sms>()))
+                .ReturnsAsync(gatewayResult);
+
+            SmsClient smsClient = new(_clientMock.Object);
+
+            // Act
+            var result = await smsClient.SendAsync(new Core.Sending.Sms());
+
+            // Assert
+            Assert.True(result.IsError);
+            await result.Match(
+              async actualGatewayId =>
+              {
+                  await Task.CompletedTask;
+                  throw new ArgumentException("Should not be able to get gateway reference from error response");
+              },
+              async actualErrorResponse =>
+              {
+                  await Task.CompletedTask;
+                  Assert.Equal(SmsSendResult.Failed, actualErrorResponse.SendResult);
+              });
+        }
+
+        [Fact]
+        public async Task SendAsync_GatewayReturnsNonSuccess_InvalidReceiver()
         {
 
             // Arrange
@@ -35,7 +65,7 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
               async actualGatewayId =>
               {
                   await Task.CompletedTask;
-                  throw new ArgumentException("Should not be able to get gateway id from error response");
+                  throw new ArgumentException("Should not be able to get gateway reference from error response");
               },
               async actualErrorResponse =>
               {
@@ -46,7 +76,7 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
         }
 
         [Fact]
-        public async Task SendAsync_GatewayReturnsSuccess_GatewarRefReturned()
+        public async Task SendAsync_GatewayReturnsSuccess_GatewayRefReturned()
         {
 
             // Arrange

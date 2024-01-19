@@ -8,14 +8,13 @@ namespace Altinn.Notifications.Tests.Notifications.Integrations.TestingExtension
 public class ServiceCollectionExtensionsTests
 {
     [Fact]
-    public void AddIntegrationServices_SmsGatewayConfig_ThrowsException()
+    public void AddIntegrationServices_MissingSmsGatewayConfig_ThrowsException()
     {
         // Arrange
         string expectedExceptionMessage = "Required SmsGatewayConfiguration settings is missing from application configuration. (Parameter 'config')";
 
-        Environment.SetEnvironmentVariable("SmsGatewayConfiguration__Endpoint", null);
 
-        var config = new ConfigurationBuilder().AddEnvironmentVariables().Build();
+        var config = new ConfigurationBuilder().Build();
 
         IServiceCollection services = new ServiceCollection();
 
@@ -24,5 +23,22 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         Assert.Equal(expectedExceptionMessage, exception.Message);
+    }
+
+    [Fact]
+    public void AddIntegrationServices_SmsGatewayConfigIncluded_NoException()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("SmsGatewayConfiguration__Endpoint", "https://vg.no", EnvironmentVariableTarget.Process);
+        var config = new ConfigurationBuilder().AddEnvironmentVariables().Build();
+
+        IServiceCollection services = new ServiceCollection();
+
+        // Act
+        var exception = Record.Exception(() => services.AddIntegrationServices(config));
+
+        // Assert
+        Assert.Null(exception);
+  
     }
 }
