@@ -9,7 +9,7 @@
         /// Method for requesting the sending on an sms message.
         /// </summary>
         /// <param name="sms">The sms to be sent</param>
-        /// <returns>A id for tracing the sucess of the task or an <see cref="SmsClientErrorResponse"/> it the task fails</returns>
+        /// <returns>An id for tracing the sucess of the task or an <see cref="SmsClientErrorResponse"/> it the task fails</returns>
         public Task<Result<string, SmsClientErrorResponse>> SendSmsAsync(Sending.Sms sms);
     }
 }
