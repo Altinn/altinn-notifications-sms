@@ -2,10 +2,7 @@
 using Altinn.Notifications.Sms.Core.Integrations;
 using Altinn.Notifications.Sms.Core.Integrations.Interfaces;
 using Altinn.Notifications.Sms.Core.Status;
-
-using LinkMobility.PSWin.Client;
 using LinkMobility.PSWin.Client.Model;
-using LinkMobility.PSWin.Client.Transports;
 
 using LinkMobilityModel = global::LinkMobility.PSWin.Client.Model;
 
@@ -17,19 +14,19 @@ namespace Altinn.Notifications.Sms.Integrations.LinkMobility
     /// </summary>
     public class SmsClient : ISmsClient
     {
-        private readonly GatewayClient _client;
+        private readonly IAltinnGatewayClient _client;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SmsClient"/> class.
         /// </summary>
         /// <param name="gatewayConfig">The configuration for the sms gateway</param>
-        public SmsClient(SmsGatewayConfiguration gatewayConfig)
+        public SmsClient(IAltinnGatewayClient client)
         {
-            _client = new(new XmlTransport(gatewayConfig.Username, gatewayConfig.Password, new Uri(gatewayConfig.Endpoint)));
+            _client = client;
         }
 
         /// <inheritdoc />
-        public async Task<Result<string, SmsClientErrorResponse>> SendSmsAsync(Core.Sending.Sms sms)
+        public async Task<Result<string, SmsClientErrorResponse>> SendAsync(Core.Sending.Sms sms)
         {
             MessageResult result = await _client.SendAsync(new LinkMobilityModel.Sms(sms.Recipient, sms.Message, sms.Sender));
 

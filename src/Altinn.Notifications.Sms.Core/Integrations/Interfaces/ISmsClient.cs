@@ -10,6 +10,6 @@
         /// </summary>
         /// <param name="sms">The sms to be sent</param>
         /// <returns>An id for tracing the sucess of the task or an <see cref="SmsClientErrorResponse"/> it the task fails</returns>
-        public Task<Result<string, SmsClientErrorResponse>> SendSmsAsync(Sending.Sms sms);
+        public Task<Result<string, SmsClientErrorResponse>> SendAsync(Sending.Sms sms);
     }
 }

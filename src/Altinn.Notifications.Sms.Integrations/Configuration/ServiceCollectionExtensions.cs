@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddSingleton<ISmsClient, SmsClient>()
+                .AddSingleton<IAltinnGatewayClient, AltinnGatewayClient>()
                 .AddSingleton(smsGatewaySettings);
         return services;
     }

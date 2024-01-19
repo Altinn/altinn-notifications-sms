@@ -13,8 +13,8 @@ namespace Altinn.Notifications.Sms.Core.Integrations
         public SmsSendResult SendResult { get; set; }
 
         /// <summary>
-        /// Th  error message from the sms client service
+        /// The error message from the sms client service
         /// </summary>
-        public string ErrorMessage { get; set; } = string.Empty;
+        public string? ErrorMessage { get; set; }
     }
 }
