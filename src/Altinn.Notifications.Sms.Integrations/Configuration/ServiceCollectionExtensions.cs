@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Altinn.Notifications.Sms.Core.Integrations.Interfaces;
+using Altinn.Notifications.Sms.Integrations.LinkMobility;
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Altinn.Notifications.Sms.Integrations.Configuration;
@@ -16,6 +19,15 @@ public static class ServiceCollectionExtensions
     /// <returns>The given service collection.</returns>
     public static IServiceCollection AddIntegrationServices(this IServiceCollection services, IConfiguration config)
     {
+        SmsGatewayConfiguration smsGatewaySettings = config!.GetSection(nameof(SmsGatewayConfiguration)).Get<SmsGatewayConfiguration>()!;
+
+        if (smsGatewaySettings == null)
+        {
+            throw new ArgumentNullException(nameof(config), "Required SmsGatewayConfiguration settings is missing from application configuration");
+        }
+
+        services.AddSingleton<ISmsClient, SmsClient>()
+                .AddSingleton(smsGatewaySettings);
         return services;
     }
 }
