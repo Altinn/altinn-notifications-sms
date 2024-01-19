@@ -7,20 +7,25 @@ using LinkMobility.PSWin.Client;
 using LinkMobility.PSWin.Client.Model;
 using LinkMobility.PSWin.Client.Transports;
 
-using Microsoft.Extensions.Options;
-
 using LinkMobilityModel = global::LinkMobility.PSWin.Client.Model;
 
 namespace Altinn.Notifications.Sms.Integrations.LinkMobility
 {
+    /// <summary>
+    /// Represents an implementation of <see cref="ISmsClient"/> that will use LinkMobility's
+    /// SMS gateway to send text messages.
+    /// </summary>
     public class SmsClient : ISmsClient
     {
         private readonly GatewayClient _client;
 
-        public SmsClient(IOptions<SmsGatewayConfiguration> gatewaySettings)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SmsClient"/> class.
+        /// </summary>
+        /// <param name="gatewayConfig">The configuration for the sms gateway</param>
+        public SmsClient(SmsGatewayConfiguration gatewayConfig)
         {
-            SmsGatewayConfiguration settings = gatewaySettings.Value;
-            _client = new(new XmlTransport(settings.Username, settings.Password, new Uri(settings.Endpoint)));
+            _client = new(new XmlTransport(gatewayConfig.Username, gatewayConfig.Password, new Uri(gatewayConfig.Endpoint)));
         }
 
         /// <inheritdoc />
@@ -36,7 +41,6 @@ namespace Altinn.Notifications.Sms.Integrations.LinkMobility
             if (result.StatusText.StartsWith("Invalid RCV"))
             {
                 return new SmsClientErrorResponse { SendResult = SmsSendResult.Failed_InvalidReceiver, ErrorMessage = result.StatusText };
-
             }
 
             return new SmsClientErrorResponse { SendResult = SmsSendResult.Failed };

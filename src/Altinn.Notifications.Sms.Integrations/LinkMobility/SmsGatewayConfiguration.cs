@@ -1,5 +1,8 @@
 ﻿namespace Altinn.Notifications.Sms.Integrations.LinkMobility
 {
+    /// <summary>
+    /// Configuration for the LinkMobility SMS gateway
+    /// </summary>
     public class SmsGatewayConfiguration
     {
         /// <summary>

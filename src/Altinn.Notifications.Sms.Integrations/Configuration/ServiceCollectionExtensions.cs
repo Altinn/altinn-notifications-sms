@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
 
         if (smsGatewaySettings == null)
         {
-            throw new ArgumentNullException(nameof(config), "Required SmsGatewayConfiguration settings is missing from application configuration");
+            throw new ArgumentNullException(nameof(config), "Required SmsGatewayConfiguration settings is missing from application configuration.");
         }
 
         services.AddSingleton<ISmsClient, SmsClient>()

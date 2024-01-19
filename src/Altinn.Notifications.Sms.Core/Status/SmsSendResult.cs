@@ -1,12 +1,13 @@
 ﻿namespace Altinn.Notifications.Sms.Core.Status
 {
+    /// <summary>
+    /// Enum describing sms send result types
+    /// </summary>
     public enum SmsSendResult
     {
-        Sending, 
+        Sending,
         Accepted,
         Failed,
-        Failed_InvalidReceiver,
-
-
+        Failed_InvalidReceiver
     }
 }
