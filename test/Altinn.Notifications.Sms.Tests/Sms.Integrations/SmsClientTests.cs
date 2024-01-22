@@ -7,7 +7,6 @@ using Moq;
 
 using LinkMobilityModel = global::LinkMobility.PSWin.Client.Model;
 
-
 namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
 {
     public class SmsClientTests
@@ -17,7 +16,6 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
         [Fact]
         public async Task SendAsync_GatewayReturnsNonSuccess_UnknownError()
         {
-
             // Arrange
             var gatewayResult = new MessageResult(null, false, "This is an unknown error message", null);
 
@@ -47,7 +45,6 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
         [Fact]
         public async Task SendAsync_GatewayReturnsNonSuccess_InvalidReceiver()
         {
-
             // Arrange
             var gatewayResult = new MessageResult(null, false, "Invalid RCV '12345678'. Receiver number must be at least 9 digits.", null);
 
@@ -78,7 +75,6 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
         [Fact]
         public async Task SendAsync_GatewayReturnsSuccess_GatewayRefReturned()
         {
-
             // Arrange
             string gatewayReference = Guid.NewGuid().ToString();
 
@@ -86,7 +82,6 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
 
             _clientMock.Setup(cm => cm.SendAsync(It.IsAny<LinkMobilityModel.Sms>()))
                 .ReturnsAsync(gatewayResult);
-
 
             SmsClient smsClient = new(_clientMock.Object);
 

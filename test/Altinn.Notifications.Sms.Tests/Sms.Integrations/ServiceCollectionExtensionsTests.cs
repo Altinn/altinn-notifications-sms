@@ -13,7 +13,6 @@ public class ServiceCollectionExtensionsTests
         // Arrange
         string expectedExceptionMessage = "Required SmsGatewayConfiguration settings is missing from application configuration. (Parameter 'config')";
 
-
         var config = new ConfigurationBuilder().Build();
 
         IServiceCollection services = new ServiceCollection();
@@ -39,6 +38,5 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         Assert.Null(exception);
-  
     }
 }
