@@ -1,6 +1,6 @@
-﻿using Altinn.Notifications.Sms.Core;
-using Altinn.Notifications.Sms.Core.Integrations;
-using Altinn.Notifications.Sms.Core.Integrations.Interfaces;
+﻿using Altinn.Notifications.Sms.Core.Dependencies;
+using Altinn.Notifications.Sms.Core.Sending;
+using Altinn.Notifications.Sms.Core.Shared;
 using Altinn.Notifications.Sms.Core.Status;
 using LinkMobility.PSWin.Client.Model;
 

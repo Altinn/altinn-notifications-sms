@@ -1,6 +1,6 @@
 ﻿using Altinn.Notifications.Sms.Core.Status;
 
-namespace Altinn.Notifications.Sms.Core.Integrations
+namespace Altinn.Notifications.Sms.Core.Sending
 {
     /// <summary>
     /// Class representing an error response from an sms client service

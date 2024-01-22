@@ -1,4 +1,4 @@
-﻿namespace Altinn.Notifications.Sms.Core;
+﻿namespace Altinn.Notifications.Sms.Core.Shared;
 
 /// <summary>
 /// A simple implementation of the Result class to handle success XOR failure as separate return 

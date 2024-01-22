@@ -1,4 +1,4 @@
-﻿using Altinn.Notifications.Sms.Core.Integrations.Interfaces;
+﻿using Altinn.Notifications.Sms.Core.Dependencies;
 using Altinn.Notifications.Sms.Integrations.LinkMobility;
 
 using Microsoft.Extensions.Configuration;

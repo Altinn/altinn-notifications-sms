@@ -1,4 +1,7 @@
-﻿namespace Altinn.Notifications.Sms.Core.Integrations.Interfaces
+﻿using Altinn.Notifications.Sms.Core.Sending;
+using Altinn.Notifications.Sms.Core.Shared;
+
+namespace Altinn.Notifications.Sms.Core.Dependencies
 {
     /// <summary>
     /// This interface describes the public interface of a client able to send sms messages through an sms service.
