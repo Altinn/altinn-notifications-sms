@@ -1,6 +1,8 @@
 ﻿using Altinn.Notifications.Sms.Core.Dependencies;
 using Altinn.Notifications.Sms.Integrations.Consumers;
+using Altinn.Notifications.Sms.Integrations.LinkMobility;
 using Altinn.Notifications.Sms.Integrations.Producers;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,12 +27,21 @@ public static class ServiceCollectionExtensions
         {
             throw new ArgumentNullException(nameof(config), "Required Kafka settings is missing from application configuration");
         }
+        
+        SmsGatewayConfiguration smsGatewaySettings = config!.GetSection(nameof(SmsGatewayConfiguration)).Get<SmsGatewayConfiguration>()!;
+
+        if (smsGatewaySettings == null)
+        {
+            throw new ArgumentNullException(nameof(config), "Required SmsGatewayConfiguration settings is missing from application configuration.");
+        }
 
         services
             .AddSingleton<ICommonProducer, CommonProducer>()
             .AddHostedService<SendSmsQueueConsumer>()
-            .AddSingleton(kafkaSettings);
-
+            .AddSingleton(kafkaSettings)
+            .AddSingleton<ISmsClient, SmsClient>()
+            .AddSingleton<IAltinnGatewayClient, AltinnGatewayClient>()
+            .AddSingleton(smsGatewaySettings);
         return services;
     }
 }
