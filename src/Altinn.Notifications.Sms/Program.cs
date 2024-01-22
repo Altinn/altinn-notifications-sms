@@ -88,7 +88,7 @@ async Task ConnectToKeyVaultAndSetApplicationInsights(ConfigurationManager confi
 void ConfigureServices(IServiceCollection services, ConfigurationManager configuration)
 {
     services.AddControllers();
-    services.AddHealthChecks().AddCheck<HealthCheck>("notifications_emails_health_check");
+    services.AddHealthChecks().AddCheck<HealthCheck>("notifications_sms_health_check");
 
     services.AddCoreServices(configuration);
     services.AddIntegrationServices(configuration);
