@@ -28,7 +28,7 @@ namespace Altinn.Notifications.Sms.Integrations.LinkMobility
         /// <inheritdoc />
         public async Task<Result<string, SmsClientErrorResponse>> SendAsync(Core.Sending.Sms sms)
         {
-            MessageResult result = await _client.SendAsync(new LinkMobilityModel.Sms(sms.Recipient, sms.Message, sms.Sender));
+            MessageResult result = await _client.SendAsync(new LinkMobilityModel.Sms(sms.Sender, sms.Recipient, sms.Message));
 
             if (result.IsStatusOk)
             {

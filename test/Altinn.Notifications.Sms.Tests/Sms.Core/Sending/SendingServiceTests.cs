@@ -23,7 +23,7 @@ public class SendingServiceTests
     {
         // Arrange
         Guid id = Guid.NewGuid();
-        Notifications.Sms.Core.Sending.Sms sms = new(id, "recipient", "sender", "message");
+        Notifications.Sms.Core.Sending.Sms sms = new(id, "sender", "recipient", "message");
 
         Mock<ISmsClient> clientMock = new();
         clientMock.Setup(c => c.SendAsync(It.IsAny<Notifications.Sms.Core.Sending.Sms>()))
@@ -50,7 +50,7 @@ public class SendingServiceTests
     {
         // Arrange
         Guid id = Guid.NewGuid();
-        Notifications.Sms.Core.Sending.Sms sms = new(id, "recipient", "sender", "message");
+        Notifications.Sms.Core.Sending.Sms sms = new(id, "sender", "recipient", "message");
 
         Mock<ISmsClient> clientMock = new();
         clientMock.Setup(c => c.SendAsync(It.IsAny<Notifications.Sms.Core.Sending.Sms>()))

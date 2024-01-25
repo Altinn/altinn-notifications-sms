@@ -55,7 +55,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
         var sendingServiceMock = new Mock<ISendingService>();
         sendingServiceMock.Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>())).Returns(Task.CompletedTask);
 
-        Core.Sending.Sms sms = new(Guid.NewGuid(), "recipient", "sender", "message");
+        Core.Sending.Sms sms = new(Guid.NewGuid(), "sender", "recipient", "message");
 
         using SendSmsQueueConsumer queueConsumer = GetSmsSendingConsumer(sendingServiceMock.Object);
         using CommonProducer commonProducer = KafkaUtil.GetKafkaProducer(_serviceProvider!);

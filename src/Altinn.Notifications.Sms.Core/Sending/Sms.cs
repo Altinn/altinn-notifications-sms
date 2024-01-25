@@ -13,17 +13,17 @@ public class Sms
     public Guid NotificationId { get; set; }
 
     /// <summary>
-    /// Gets or sets the recipient of the sms message
-    /// </summary>
-    public string Recipient { get; set; } = string.Empty;
-
-    /// <summary>
     /// Gets or sets the sender of the sms message
     /// </summary>
     /// <remarks>
     /// Can be a literal string or a phone number
     /// </remarks>
     public string Sender { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the recipient of the sms message
+    /// </summary>
+    public string Recipient { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the contents of the sms message
@@ -33,7 +33,7 @@ public class Sms
     /// <summary>
     /// Initializes a new instance of the <see cref="Sms"/> class.
     /// </summary>
-    public Sms(Guid notificationId, string recipient, string sender, string message)
+    public Sms(Guid notificationId, string sender, string recipient, string message)
     {
         NotificationId = notificationId;
         Recipient = recipient;
