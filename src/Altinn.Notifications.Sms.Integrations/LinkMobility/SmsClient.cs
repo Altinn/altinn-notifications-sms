@@ -19,7 +19,7 @@ namespace Altinn.Notifications.Sms.Integrations.LinkMobility
         /// <summary>
         /// Initializes a new instance of the <see cref="SmsClient"/> class.
         /// </summary>
-        /// <param name="gatewayConfig">The configuration for the sms gateway</param>
+        /// <param name="client">Gateway Client</param>
         public SmsClient(IAltinnGatewayClient client)
         {
             _client = client;

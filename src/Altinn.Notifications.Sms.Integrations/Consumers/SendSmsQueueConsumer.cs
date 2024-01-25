@@ -1,5 +1,6 @@
 ﻿using Altinn.Notifications.Integrations.Kafka.Consumers;
 using Altinn.Notifications.Sms.Core.Dependencies;
+using Altinn.Notifications.Sms.Core.Sending;
 using Altinn.Notifications.Sms.Integrations.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +11,7 @@ namespace Altinn.Notifications.Sms.Integrations.Consumers;
 /// </summary>
 public sealed class SendSmsQueueConsumer : KafkaConsumerBase
 {
+    private readonly ISendingService _sendingService;
     private readonly ICommonProducer _producer;
     private readonly ILogger<SendSmsQueueConsumer> _logger;
     private readonly string _retryTopicName;
@@ -19,10 +21,12 @@ public sealed class SendSmsQueueConsumer : KafkaConsumerBase
     /// </summary>
     public SendSmsQueueConsumer(
         KafkaSettings kafkaSettings,
+        ISendingService sendingService,
         ICommonProducer producer,
         ILogger<SendSmsQueueConsumer> logger)
         : base(kafkaSettings, logger, kafkaSettings.SendSmsQueueTopicName)
     {
+        _sendingService = sendingService;
         _producer = producer;
         _retryTopicName = kafkaSettings.SendSmsQueueRetryTopicName;
         _logger = logger;
@@ -36,8 +40,16 @@ public sealed class SendSmsQueueConsumer : KafkaConsumerBase
 
     private async Task ConsumeSms(string message)
     {
-        _logger.LogInformation($"// SendSmsQueueConsumer // ConsumeSms // Consuming message: {message}");
-        await Task.CompletedTask;
+        bool succeeded = Core.Sending.Sms.TryParse(message, out Core.Sending.Sms sms);
+
+        if (!succeeded)
+        {
+            _logger.LogError("// SendSmsQueueConsumer // ConsumeSms // Deserialization of message failed. {Message}", message);
+
+            return;
+        }
+
+        await _sendingService.SendAsync(sms);
     }
 
     private async Task RetrySms(string message)
