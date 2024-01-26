@@ -10,13 +10,11 @@ public class SendOperationResult
 {
     private static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions()
     {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-        WriteIndented = true,
-        Converters = { new JsonStringEnumConverter() },
-        PropertyNameCaseInsensitive = true
+        Converters = { new JsonStringEnumConverter() }
     };
-
+    
     /// <summary>
     /// The notification id
     /// </summary>
