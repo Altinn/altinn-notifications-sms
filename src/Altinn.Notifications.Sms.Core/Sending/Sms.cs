@@ -7,6 +7,11 @@ namespace Altinn.Notifications.Sms.Core.Sending;
 /// </summary>
 public class Sms
 {
+    private static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     /// <summary>
     /// Gets or sets the id of the sms.
     /// </summary>
@@ -63,13 +68,7 @@ public class Sms
 
         try
         {
-            parsedOutput = JsonSerializer.Deserialize<Sms>(
-            input!,
-            new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
+            parsedOutput = JsonSerializer.Deserialize<Sms>(input!, _serializerOptions);
             value = parsedOutput!;
             return value.NotificationId != Guid.Empty;
         }
