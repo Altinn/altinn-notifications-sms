@@ -19,7 +19,7 @@ public class SendingServiceTests
     }
 
     [Fact]
-    public async Task SendAsync_GatewayReferenceGenerated_PublishedToExpectedKafkaTopic()
+    public async Task SendAsync_GatewayReferenceGenerated_SendingAccepted()
     {
         // Arrange
         Guid id = Guid.NewGuid();
@@ -34,6 +34,7 @@ public class SendingServiceTests
             It.Is<string>(s => s.Equals(nameof(_topicSettings.SmsStatusUpdatedTopicName))),
             It.Is<string>(s =>
             s.Contains("\"gatewayReference\":\"gateway-reference\"") &&
+            s.Contains("\"sendResult\":\"Accepted\"") &&
             s.Contains($"\"notificationId\":\"{id}\""))));
 
         var sut = new SendingService(clientMock.Object, producerMock.Object, _topicSettings);
