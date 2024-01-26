@@ -5,7 +5,7 @@ namespace Altinn.Notifications.Sms.Core.Sending;
 /// </summary>
 public interface ISendingService
 {
-        /// <summary>
+    /// <summary>
     /// Send an sms
     /// </summary>
     /// <param name="sms">The details for an sms to be sent.</param>

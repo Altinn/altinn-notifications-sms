@@ -49,7 +49,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ConsumeSmsTest_Successfull_deserialization_of_message_Service_called_once()
+    public async Task ConsumeSms_SendingServiceCalledOnce_Success()
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
@@ -72,7 +72,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ConsumeSmsTest_Deserialization_of_message_fails_Never_calls_service()
+    public async Task ConsumeSms_InvalidSms_SendingServiceNeverCalled_Fail()
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();

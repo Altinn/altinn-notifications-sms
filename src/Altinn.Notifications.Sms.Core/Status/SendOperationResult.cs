@@ -8,6 +8,15 @@ namespace Altinn.Notifications.Sms.Core.Status;
 /// </summary>
 public class SendOperationResult
 {
+    private static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
+        PropertyNameCaseInsensitive = true
+    };
+
     /// <summary>
     /// The notification id
     /// </summary>
@@ -28,13 +37,6 @@ public class SendOperationResult
     /// </summary>
     public string Serialize()
     {
-        return JsonSerializer.Serialize(
-            this,
-            new JsonSerializerOptions
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            });
+        return JsonSerializer.Serialize(this, _serializerOptions);
     }
 }

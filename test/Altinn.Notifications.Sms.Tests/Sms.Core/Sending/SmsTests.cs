@@ -38,9 +38,9 @@ public class SmsTests
     }
 
     [Fact]
-    public void TryParse_InvalidString_False()
+    public void TryParse_InvalidGuid_False()
     {
-        bool actualResult = Notifications.Sms.Core.Sending.Sms.TryParse("{\"notificationId\":\"nothing\"}", out _);
+        bool actualResult = Notifications.Sms.Core.Sending.Sms.TryParse("{\"notificationId\":\"thisIsNotAGuid\"}", out _);
 
         Assert.False(actualResult);
     }
@@ -48,7 +48,7 @@ public class SmsTests
     [Fact]
     public void TryParse_InvalidJsonExceptionThrown_False()
     {
-        bool actualResult = Notifications.Sms.Core.Sending.Sms.TryParse("{\"fakefield\":\"nothing\"}", out _);
+        bool actualResult = Notifications.Sms.Core.Sending.Sms.TryParse("{\"fakefield\"=nothing\"}", out _);
 
         Assert.False(actualResult);
     }

@@ -1,5 +1,4 @@
-﻿using Altinn.Notifications.Integrations.Kafka.Consumers;
-using Altinn.Notifications.Sms.Core.Dependencies;
+﻿using Altinn.Notifications.Sms.Core.Dependencies;
 using Altinn.Notifications.Sms.Core.Sending;
 using Altinn.Notifications.Sms.Integrations.Configuration;
 using Microsoft.Extensions.Logging;

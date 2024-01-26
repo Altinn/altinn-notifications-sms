@@ -1,11 +1,10 @@
 ﻿using Altinn.Notifications.Sms.Integrations.Configuration;
-
 using Confluent.Kafka;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Altinn.Notifications.Integrations.Kafka.Consumers;
+namespace Altinn.Notifications.Sms.Integrations.Consumers;
 
 /// <summary>
 /// Base class for Kafka consumers
