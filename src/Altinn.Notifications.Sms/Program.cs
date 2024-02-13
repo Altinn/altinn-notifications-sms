@@ -111,7 +111,7 @@ void ConfigureServices(IServiceCollection services, ConfigurationManager configu
 
     if (userSettings == null)
     {
-        throw new ArgumentNullException(nameof(configuration), "Required User settings is missing from application configuration");
+        throw new ArgumentNullException(nameof(configuration), "Required user settings is missing from application configuration");
     }
 
     services.AddSingleton(userSettings);
