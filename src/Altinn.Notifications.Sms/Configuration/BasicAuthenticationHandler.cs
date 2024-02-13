@@ -13,7 +13,7 @@ namespace Altinn.Notifications.Sms.Configuration;
 /// </summary>
 public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
-    private readonly UserSettings _userSettings;
+    private readonly DeliveryReportSettings _deliveryReportSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BasicAuthenticationHandler"/> class.
@@ -21,15 +21,15 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     /// <param name="options">options</param>
     /// <param name="logger">logger</param>
     /// <param name="encoder">encoder</param>
-    /// <param name="userSettings">userSettings</param>
+    /// <param name="deliveryReportSettings">userSettings</param>
     public BasicAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        UserSettings userSettings)
+        DeliveryReportSettings deliveryReportSettings)
         : base(options, logger, encoder)
     {
-        _userSettings = userSettings;
+        _deliveryReportSettings = deliveryReportSettings;
     }
  
     /// <summary>
@@ -58,7 +58,7 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
             return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
         }
 
-        if (username != _userSettings.Username || password != _userSettings.Password)
+        if (username != _deliveryReportSettings.UserSettings.Username || password != _deliveryReportSettings.UserSettings.Password)
         {
             return Task.FromResult(AuthenticateResult.Fail("Invalid Username or Password"));
         }

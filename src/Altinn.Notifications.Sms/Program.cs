@@ -107,20 +107,20 @@ async Task ConnectToKeyVaultAndSetApplicationInsights(ConfigurationManager confi
 
 void ConfigureServices(IServiceCollection services, ConfigurationManager configuration)
 {
-    UserSettings userSettings = configuration!.GetSection(nameof(UserSettings)).Get<UserSettings>()!;
+    DeliveryReportSettings deliveryReportSettings = configuration!.GetSection(nameof(DeliveryReportSettings)).Get<DeliveryReportSettings>()!;
 
-    if (userSettings == null)
+    if (deliveryReportSettings == null)
     {
-        throw new ArgumentNullException(nameof(configuration), "Required user settings is missing from application configuration");
+        throw new ArgumentNullException(nameof(configuration), "Required delivery report settings is missing from application configuration");
     }
 
-    services.AddSingleton(userSettings);
+    services.AddSingleton(deliveryReportSettings);
     services.AddControllers();
     services.AddHealthChecks().AddCheck<HealthCheck>("notifications_sms_health_check");
 
     services.AddCoreServices(configuration);
     services.AddIntegrationServices(configuration);
-        
+
     if (!string.IsNullOrEmpty(applicationInsightsConnectionString))
     {
         services.AddSingleton(typeof(ITelemetryChannel), new ServerTelemetryChannel { StorageFolder = "/tmp/logtelemetry" });
@@ -139,7 +139,7 @@ void ConfigureServices(IServiceCollection services, ConfigurationManager configu
 void Configure()
 {
     app.MapControllers();
-    app.MapHealthChecks("/health");    
+    app.MapHealthChecks("/health");
 }
 
 void IncludeXmlComments(SwaggerGenOptions swaggerGenOptions)

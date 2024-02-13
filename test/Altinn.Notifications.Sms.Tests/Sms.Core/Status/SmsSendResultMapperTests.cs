@@ -3,7 +3,7 @@ using LinkMobility.PSWin.Receiver.Model;
 
 namespace Altinn.Notifications.Sms.Tests.Sms.Core.Status;
 
-public class SmsSendResultTests
+public class SmsSendResultMapperTests
 {
     [Theory]
     [InlineData(DeliveryState.UNKNOWN, SmsSendResult.Failed)]
@@ -32,5 +32,21 @@ public class SmsSendResultTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() => SmsSendResultMapper.ParseDeliveryState(unhandledState));
+    }
+
+    [Fact]
+    public void ParseDeliveryState_AllDeliveryStatesHaveMappings()
+    {
+        try
+        {
+            foreach (DeliveryState item in Enum.GetValues(typeof(DeliveryState)))
+            {
+                _ = SmsSendResultMapper.ParseDeliveryState(item);
+            }
+        }
+        catch (ArgumentException ex)
+        {
+            Assert.Fail("Delivery state without mapping occurred." + ex.Message);
+        }
     }
 }
