@@ -8,7 +8,7 @@ namespace Altinn.Notifications.Sms.Core.Status;
 public static class SmsSendResultMapper
 {
     /// <summary>
-    /// Parse DeliveryState to SmsSendResult 
+    /// Parse DeliveryState to SmsSendResult, only mapping types that are relevant for our subsscription
     /// </summary>
     /// <param name="deliveryState">Delivery state from Link Mobility</param>
     /// <returns></returns>

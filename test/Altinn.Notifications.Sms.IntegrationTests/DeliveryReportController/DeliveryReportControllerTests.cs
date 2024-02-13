@@ -119,8 +119,8 @@ public class DeliveryReportControllerTests : IClassFixture<IntegrationTestWebApp
             {
                 services.Configure<DeliveryReportSettings>(opts =>
                 {
-                    opts.Username = _username;
-                    opts.Password = _password;
+                    opts.UserSettings.Username = _username;
+                    opts.UserSettings.Password = _password;
                 });
 
                 services.AddSingleton(sendingServiceMock.Object);
