@@ -9,14 +9,14 @@ using Microsoft.Extensions.Options;
 namespace Altinn.Notifications.Sms.Configuration;
 
 /// <summary>
-/// Some basic auth handler
+/// Set up basic authentication handler for controller endpoints
 /// </summary>
 public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     private readonly UserSettings _userSettings;
 
     /// <summary>
-    /// constructor
+    /// Initializes a new instance of the <see cref="BasicAuthenticationHandler"/> class.
     /// </summary>
     /// <param name="options">options</param>
     /// <param name="logger">logger</param>
@@ -33,9 +33,8 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     }
  
     /// <summary>
-    /// Authenticate
+    /// Authenticate the user
     /// </summary>
-    /// <returns></returns>
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         string username = string.Empty;

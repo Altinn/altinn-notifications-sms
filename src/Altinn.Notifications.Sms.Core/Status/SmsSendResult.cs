@@ -6,6 +6,11 @@
 public enum SmsSendResult
 {
     /// <summary>
+    /// Sms send operation running
+    /// </summary>
+    Sending,
+
+    /// <summary>
     /// Sms send operation accepted
     /// </summary>
     Accepted,
@@ -41,27 +46,12 @@ public enum SmsSendResult
     Failed_InvalidReceiver,
 
     /// <summary>
-    /// No delivery report received from operator. Unknown delivery status.
-    /// </summary>
-    Failed_Null,
-
-    /// <summary>
     /// The SMS was undeliverable (not a valid number or no available route to destination).
     /// </summary>
     Failed_Undelivered,
 
     /// <summary>
-    /// No information of delivery status available.
-    /// </summary>
-    Failed_Unknown,
-
-    /// <summary>
     /// Message was rejected.
     /// </summary>
     Failed_Rejected,
-
-    /// <summary>
-    /// Sms send operation running
-    /// </summary>
-    Sending
 }

@@ -6,14 +6,14 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Core.Status;
 public class SmsSendResultTests
 {
     [Theory]
-    [InlineData(DeliveryState.UNKNOWN, SmsSendResult.Failed_Unknown)]
+    [InlineData(DeliveryState.UNKNOWN, SmsSendResult.Failed)]
     [InlineData(DeliveryState.DELIVRD, SmsSendResult.Delivered)]
     [InlineData(DeliveryState.EXPIRED, SmsSendResult.Failed_Expired)]
     [InlineData(DeliveryState.DELETED, SmsSendResult.Failed_Deleted)]
     [InlineData(DeliveryState.UNDELIV, SmsSendResult.Failed_Undelivered)]
     [InlineData(DeliveryState.REJECTD, SmsSendResult.Failed_Rejected)]
     [InlineData(DeliveryState.FAILED, SmsSendResult.Failed)]
-    [InlineData(DeliveryState.NULL, SmsSendResult.Failed_Null)]
+    [InlineData(DeliveryState.NULL, SmsSendResult.Failed)]
     [InlineData(DeliveryState.BARRED, SmsSendResult.Failed_BarredReceiver)]
     public void ParseDeliveryState_WithValidInput_ReturnsExpectedResult(DeliveryState input, SmsSendResult expected)
     {
