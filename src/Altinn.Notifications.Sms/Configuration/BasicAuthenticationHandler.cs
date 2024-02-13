@@ -31,37 +31,40 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     {
         _userSettings = userSettings;
     }
-
+ 
     /// <summary>
     /// Authenticate
     /// </summary>
     /// <returns></returns>
-    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        string username;
-        string password;
+        string username = string.Empty;
+        string password = string.Empty;
 
         if (!Request.Headers.TryGetValue("Authorization", out var authorizationHeader))
         {
-            return AuthenticateResult.Fail("Missing Authorization Header");
+            return Task.FromResult(AuthenticateResult.Fail("Missing Authorization Header"));
         }
 
         try
         {
             var authHeader = AuthenticationHeaderValue.Parse(authorizationHeader!);
-            var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
-            var credentials = Encoding.UTF8.GetString(credentialBytes).Split([':'], 2);
-            username = credentials[0];
-            password = credentials[1];
+            if (authHeader != null)
+            {
+                var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
+                var credentials = Encoding.UTF8.GetString(credentialBytes).Split([':'], 2);
+                username = credentials[0];
+                password = credentials[1];
+            }
         }
         catch
         {
-            return AuthenticateResult.Fail("Invalid Authorization Header");
+            return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
         }
 
         if (username != _userSettings.Username || password != _userSettings.Password)
         {
-            return AuthenticateResult.Fail("Invalid Username or Password");
+            return Task.FromResult(AuthenticateResult.Fail("Invalid Username or Password"));
         }
 
         var claims = new[]
@@ -72,6 +75,6 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
         var principal = new ClaimsPrincipal(identity);
         var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
-        return AuthenticateResult.Success(ticket);
+        return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }
