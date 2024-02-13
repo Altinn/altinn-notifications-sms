@@ -23,14 +23,12 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     /// <param name="encoder">encoder</param>
     /// <param name="clock">clock</param>
     /// <param name="userSettings">userSettings</param>
-    [Obsolete]
     public BasicAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        ISystemClock clock,
         UserSettings userSettings)
-        : base(options, logger, encoder, clock)
+        : base(options, logger, encoder)
     {
         _userSettings = userSettings;
     }
@@ -41,8 +39,8 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     /// <returns></returns>
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        var username = string.Empty;
-        var password = string.Empty;
+        string username;
+        string password;
 
         if (!Request.Headers.TryGetValue("Authorization", out var authorizationHeader))
         {

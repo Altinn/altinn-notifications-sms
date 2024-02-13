@@ -6,15 +6,15 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Core.Status;
 public class SmsSendResultTests
 {
     [Theory]
-    [InlineData(DeliveryState.UNKNOWN, SmsSendResult.UNKNOWN)]
-    [InlineData(DeliveryState.DELIVRD, SmsSendResult.DELIVERED)]
-    [InlineData(DeliveryState.EXPIRED, SmsSendResult.EXPIRED)]
-    [InlineData(DeliveryState.DELETED, SmsSendResult.DELETED)]
-    [InlineData(DeliveryState.UNDELIV, SmsSendResult.UNDELIVERED)]
-    [InlineData(DeliveryState.REJECTD, SmsSendResult.REJECTED)]
-    [InlineData(DeliveryState.FAILED, SmsSendResult.FAILED)]
-    [InlineData(DeliveryState.NULL, SmsSendResult.NULL)]
-    [InlineData(DeliveryState.BARRED, SmsSendResult.BARRED)]
+    [InlineData(DeliveryState.UNKNOWN, SmsSendResult.Unknown)]
+    [InlineData(DeliveryState.DELIVRD, SmsSendResult.Delivered)]
+    [InlineData(DeliveryState.EXPIRED, SmsSendResult.Expired)]
+    [InlineData(DeliveryState.DELETED, SmsSendResult.Deleted)]
+    [InlineData(DeliveryState.UNDELIV, SmsSendResult.Undelivered)]
+    [InlineData(DeliveryState.REJECTD, SmsSendResult.Rejected)]
+    [InlineData(DeliveryState.FAILED, SmsSendResult.Failed)]
+    [InlineData(DeliveryState.NULL, SmsSendResult.Null)]
+    [InlineData(DeliveryState.BARRED, SmsSendResult.Barred)]
     public void ParseDeliveryState_WithValidInput_ReturnsExpectedResult(DeliveryState input, SmsSendResult expected)
     {
         // Act

@@ -28,45 +28,40 @@ public enum SmsSendResult
     /// <summary>
     /// No information of delivery status available.
     /// </summary>
-    UNKNOWN,
+    Unknown,
 
     /// <summary>
     /// Message was successfully delivered to destination.
     /// </summary>
-    DELIVERED,
+    Delivered,
 
     /// <summary>
     /// Message validity period has expired.
     /// </summary>
-    EXPIRED,
+    Expired,
 
     /// <summary>
     /// Message has been deleted.
     /// </summary>
-    DELETED,
+    Deleted,
 
     /// <summary>
     /// The SMS was undeliverable (not a valid number or no available route to destination).
     /// </summary>
-    UNDELIVERED,
+    Undelivered,
 
     /// <summary>
     /// Message was rejected.
     /// </summary>
-    REJECTED,
-
-    /// <summary>
-    /// The SMS failed to be delivered because no operator accepted the message or due to internal Gateway error.
-    /// </summary>
-    FAILED,
+    Rejected,
 
     /// <summary>
     /// No delivery report received from operator. Unknown delivery status.
     /// </summary>
-    NULL,
+    Null,
 
     /// <summary>
     /// The receiver number is barred/blocked/not in use. Do not retry message, and remove number from any subscriber list.
     /// </summary>
-    BARRED
+    Barred
 }

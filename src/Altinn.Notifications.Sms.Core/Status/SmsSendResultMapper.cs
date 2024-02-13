@@ -5,7 +5,7 @@ namespace Altinn.Notifications.Sms.Core.Status;
 /// <summary>
 /// Mapper handling parsing to SmsSendResult
 /// </summary>
-public class SmsSendResultMapper
+public static class SmsSendResultMapper
 {
     /// <summary>
     /// Parse DeliveryState to SmsSendResult 
@@ -17,15 +17,15 @@ public class SmsSendResultMapper
     {
         return deliveryState switch
         {
-            DeliveryState.UNKNOWN => SmsSendResult.UNKNOWN,
-            DeliveryState.DELIVRD => SmsSendResult.DELIVERED,
-            DeliveryState.EXPIRED => SmsSendResult.EXPIRED,
-            DeliveryState.DELETED => SmsSendResult.DELETED,
-            DeliveryState.UNDELIV => SmsSendResult.UNDELIVERED,
-            DeliveryState.REJECTD => SmsSendResult.REJECTED,
-            DeliveryState.FAILED => SmsSendResult.FAILED,
-            DeliveryState.NULL => SmsSendResult.NULL,
-            DeliveryState.BARRED => SmsSendResult.BARRED,
+            DeliveryState.UNKNOWN => SmsSendResult.Unknown,
+            DeliveryState.DELIVRD => SmsSendResult.Delivered,
+            DeliveryState.EXPIRED => SmsSendResult.Expired,
+            DeliveryState.DELETED => SmsSendResult.Deleted,
+            DeliveryState.UNDELIV => SmsSendResult.Undelivered,
+            DeliveryState.REJECTD => SmsSendResult.Rejected,
+            DeliveryState.FAILED => SmsSendResult.Failed,
+            DeliveryState.NULL => SmsSendResult.Null,
+            DeliveryState.BARRED => SmsSendResult.Barred,
             _ => throw new ArgumentException($"Unhandled DeliveryState: {deliveryState}"),
         };
     }
