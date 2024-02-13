@@ -11,6 +11,5 @@ public interface IStatusService
     /// Update the status of an sms
     /// </summary>
     /// <param name="message">DeliveryReport from Link Mobility</param>
-    /// <returns></returns>
     Task UpdateStatusAsync(DrMessage message);
 }

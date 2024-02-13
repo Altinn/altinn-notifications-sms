@@ -17,15 +17,15 @@ public static class SmsSendResultMapper
     {
         return deliveryState switch
         {
-            DeliveryState.UNKNOWN => SmsSendResult.Unknown,
+            DeliveryState.UNKNOWN => SmsSendResult.Failed_Unknown,
             DeliveryState.DELIVRD => SmsSendResult.Delivered,
-            DeliveryState.EXPIRED => SmsSendResult.Expired,
-            DeliveryState.DELETED => SmsSendResult.Deleted,
-            DeliveryState.UNDELIV => SmsSendResult.Undelivered,
-            DeliveryState.REJECTD => SmsSendResult.Rejected,
+            DeliveryState.EXPIRED => SmsSendResult.Failed_Expired,
+            DeliveryState.DELETED => SmsSendResult.Failed_Deleted,
+            DeliveryState.UNDELIV => SmsSendResult.Failed_Undelivered,
+            DeliveryState.REJECTD => SmsSendResult.Failed_Rejected,
             DeliveryState.FAILED => SmsSendResult.Failed,
-            DeliveryState.NULL => SmsSendResult.Null,
-            DeliveryState.BARRED => SmsSendResult.Barred,
+            DeliveryState.NULL => SmsSendResult.Failed_Null,
+            DeliveryState.BARRED => SmsSendResult.Failed_BarredReceiver,
             _ => throw new ArgumentException($"Unhandled DeliveryState: {deliveryState}"),
         };
     }

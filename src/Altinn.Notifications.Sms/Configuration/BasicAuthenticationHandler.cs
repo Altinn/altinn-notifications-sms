@@ -21,7 +21,6 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     /// <param name="options">options</param>
     /// <param name="logger">logger</param>
     /// <param name="encoder">encoder</param>
-    /// <param name="clock">clock</param>
     /// <param name="userSettings">userSettings</param>
     public BasicAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
