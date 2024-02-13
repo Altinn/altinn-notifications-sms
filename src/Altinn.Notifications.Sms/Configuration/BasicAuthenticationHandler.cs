@@ -49,13 +49,11 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
         try
         {
             var authHeader = AuthenticationHeaderValue.Parse(authorizationHeader!);
-            if (authHeader != null)
-            {
-                var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
-                var credentials = Encoding.UTF8.GetString(credentialBytes).Split([':'], 2);
-                username = credentials[0];
-                password = credentials[1];
-            }
+            var credentialBytes = Convert.FromBase64String(authHeader.Parameter!);
+            var credentials = Encoding.UTF8.GetString(credentialBytes).Split([':'], 2);
+            username = credentials[0];
+            password = credentials[1];
+            
         }
         catch
         {
