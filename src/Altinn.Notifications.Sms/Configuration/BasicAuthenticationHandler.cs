@@ -44,16 +44,16 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
         var username = string.Empty;
         var password = string.Empty;
 
-        if (!Request.Headers.ContainsKey("Authorization"))
+        if (!Request.Headers.TryGetValue("Authorization", out var authorizationHeader))
         {
             return AuthenticateResult.Fail("Missing Authorization Header");
         }
 
         try
         {
-            var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
+            var authHeader = AuthenticationHeaderValue.Parse(authorizationHeader!);
             var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
-            var credentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
+            var credentials = Encoding.UTF8.GetString(credentialBytes).Split([':'], 2);
             username = credentials[0];
             password = credentials[1];
         }

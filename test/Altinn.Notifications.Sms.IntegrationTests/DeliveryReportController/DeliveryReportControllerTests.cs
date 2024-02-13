@@ -42,6 +42,38 @@ public class DeliveryReportControllerTests : IClassFixture<IntegrationTestWebApp
     }
 
     [Fact]
+    public async Task Post_ValidBearerToken_InvalidAuthorizationHeader_ReturnsBadRequest()
+    {
+        // Arrange
+        HttpClient client = GetTestClient();
+        HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, _basePath);
+        httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue(
+            "Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"invalid")));
+
+        // Act
+        HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Post_ValidBearerToken_InvalidUserName_ReturnsBadRequest()
+    {
+        // Arrange
+        HttpClient client = GetTestClient();
+        HttpRequestMessage httpRequestMessage = new(HttpMethod.Post, _basePath);
+        httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue(
+            "Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"invalidusername:{_password}")));
+
+        // Act
+        HttpResponseMessage response = await client.SendAsync(httpRequestMessage);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Post_ValidBearerToken_InvalidDeliveryReport_ReturnsBadRequest()
     {
         // Arrange
