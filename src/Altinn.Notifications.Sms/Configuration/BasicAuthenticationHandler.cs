@@ -53,7 +53,6 @@ public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSc
             var credentials = Encoding.UTF8.GetString(credentialBytes).Split([':'], 2);
             username = credentials[0];
             password = credentials[1];
-            
         }
         catch
         {
