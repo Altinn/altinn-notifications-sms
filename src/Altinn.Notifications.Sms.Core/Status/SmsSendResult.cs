@@ -41,7 +41,7 @@ public enum SmsSendResult
     Failed_Expired,
 
     /// <summary>
-    /// Sms send operation failed due to invalid receiver
+    /// Sms send operation failed due to invalid recipient e.g. receiver number
     /// </summary>
     Failed_InvalidRecipient,
 
