@@ -35,10 +35,12 @@ namespace Altinn.Notifications.Sms.Configuration
             {
                 HttpContext ctx = _httpContextAccessor.HttpContext;
 
+                #pragma warning disable SA1305 // Field names should not use Hungarian notation
                 if (ctx != null && ctx.Request.Headers.TryGetValue("X-Forwarded-For", out StringValues ipAddress))
                 {
                     request.Properties.Add("ipAddress", ipAddress.FirstOrDefault());
                 }
+                #pragma warning restore SA1305 // Field names should not use Hungarian notation
             }
 
             Next.Process(item);
