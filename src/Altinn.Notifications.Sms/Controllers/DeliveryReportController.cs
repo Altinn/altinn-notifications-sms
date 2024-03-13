@@ -40,6 +40,6 @@ public class DeliveryReportController : ControllerBase
     public async Task<ActionResult<string>> Post()
     {
         var res = await _receiver.ReceiveDeliveryReportAsync(HttpContext);
-        return Ok(res.responseBody);
+        return StatusCode((int)res.status, res.responseBody);
     }
 }

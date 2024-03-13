@@ -1,16 +1,15 @@
-﻿using LinkMobility.PSWin.Receiver.Exceptions;
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
+
+using LinkMobility.PSWin.Receiver.Exceptions;
 using LinkMobility.PSWin.Receiver.Model;
 using LinkMobility.PSWin.Receiver.Parsers;
 
 using Microsoft.AspNetCore.Http;
-
-using System;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace LinkMobility.GatewayReceiver
 {
@@ -61,7 +60,7 @@ namespace LinkMobility.GatewayReceiver
         }
 
         public async Task<(HttpStatusCode status, string responseBody)> ReceiveDeliveryReportAsync(HttpContext context)
-        {
+         {
             var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
             return await ReceiveDeliveryReportAsync(body);
         }
