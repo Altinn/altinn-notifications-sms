@@ -29,11 +29,11 @@ namespace Altinn.Notifications.Sms.Configuration
         /// <inheritdoc/>
         public void Process(ITelemetry item)
         {
-            RequestTelemetry request = item as RequestTelemetry;
+            RequestTelemetry? request = item as RequestTelemetry;
 
             if (request != null && request.Url.ToString().Contains("storage/api/"))
             {
-                HttpContext ctx = _httpContextAccessor.HttpContext;
+                HttpContext? ctx = _httpContextAccessor.HttpContext;
 
                 #pragma warning disable SA1305 // Field names should not use Hungarian notation
                 if (ctx != null && ctx.Request.Headers.TryGetValue("X-Forwarded-For", out StringValues ipAddress))
