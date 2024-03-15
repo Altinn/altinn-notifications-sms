@@ -16,13 +16,15 @@ namespace Altinn.Notifications.Sms.Controllers;
 public class DeliveryReportController : ControllerBase
 {
     private readonly GatewayReceiver _receiver;
+    private readonly ILogger<DeliveryReportController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeliveryReportController"/> class.
     /// </summary>
-    public DeliveryReportController(IStatusService statusService)
+    public DeliveryReportController(IStatusService statusService, ILogger<DeliveryReportController> logger)
     {
         _receiver = new(null, statusService.UpdateStatusAsync);
+        _logger = logger;
     }
 
     /// <summary>
@@ -34,6 +36,7 @@ public class DeliveryReportController : ControllerBase
     [SwaggerResponse(400, "The delivery report is invalid")]
     public async Task Post()
     {
+        _logger.LogInformation("// DeliveryReportController // Post // Basic auth valid, processing continuing - Time {time}", DateTime.Now);
         await _receiver.ReceiveDeliveryReportAsync(HttpContext);
     }
 }
