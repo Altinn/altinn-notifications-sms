@@ -126,7 +126,7 @@ void ConfigureServices(IServiceCollection services, ConfigurationManager configu
 
     var attributes = new List<KeyValuePair<string, object>>(2)
     {
-        KeyValuePair.Create("service.name", (object)"platform-notification-sms"),
+        KeyValuePair.Create("service.name", (object)"platform-notifications-sms"),
     };
     
     services.AddOpenTelemetry()
