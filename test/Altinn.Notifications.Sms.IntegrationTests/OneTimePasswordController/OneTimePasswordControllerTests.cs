@@ -95,6 +95,43 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         Assert.Equal("One or more validation errors occurred.", problemDetails.Title);
     }
 
+    [Fact]
+    public async Task Send_WithNullGatewayReference_ReturnsBadRequest()
+    {
+        // Arrange
+        var notificationId = Guid.NewGuid();
+
+        var sendingServiceMock = new Mock<ISendingService>();
+        sendingServiceMock
+            .Setup(e => e.SendAsync(It.IsAny<OneTimePasswordPayload>()))
+            .ReturnsAsync(new OneTimePasswordOutcome
+            {
+                GatewayReference = null,
+                NotificationId = notificationId,
+            });
+
+        var httpClient = GetTestClient(sendingServiceMock.Object);
+        var oneTimePasswordRequest = new OneTimePasswordRequest
+        {
+            Sender = "TestService",
+            Recipient = "+4799999999",
+            NotificationId = notificationId,
+            Message = "Your one time password is: 2A31519EC7C6",
+        };
+
+        // Act
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
+
+        Assert.NotNull(problemDetails);
+        Assert.Equal(400, problemDetails.Status);
+    }
+
     private HttpClient GetTestClient(ISendingService sendingService)
     {
         return _factory.WithWebHostBuilder(builder =>
