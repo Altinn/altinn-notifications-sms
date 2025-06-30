@@ -29,14 +29,8 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     public async Task Send_WhenRequestIsCanceled_Returns499ClientClosedRequest()
     {
         // Arrange
-        using var cancellationTokenSource = new CancellationTokenSource();
-
         var sendingServiceMock = new Mock<ISendingService>();
-        sendingServiceMock
-            .Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()))
-            .ThrowsAsync(new OperationCanceledException());
-
-        var httpClient = GetTestClient(sendingServiceMock.Object);
+        sendingServiceMock.Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>())).ThrowsAsync(new OperationCanceledException());
 
         var oneTimePasswordRequest = new OneTimePasswordRequest
         {
@@ -46,8 +40,10 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
             NotificationId = Guid.NewGuid(),
         };
 
+        var httpClient = GetTestClient(sendingServiceMock.Object);
+
         // Act
-        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest, cancellationTokenSource.Token);
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
 
         // Assert
         Assert.Equal((HttpStatusCode)499, response.StatusCode);
@@ -61,7 +57,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     }
 
     [Fact]
-    public async Task Send_WithMissingOrInvalidFields_ReturnsBadRequestWithValidationError()
+    public async Task Send_WithInvalidFields_ReturnsBadRequestWithValidationError()
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
@@ -92,51 +88,14 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     }
 
     [Fact]
-    public async Task Send_WhenSendingServiceThrowsInvalidOperationException_ReturnsBadRequest()
-    {
-        // Arrange
-        var sendingServiceMock = new Mock<ISendingService>();
-        sendingServiceMock
-            .Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()))
-            .ThrowsAsync(new InvalidOperationException());
-
-        var httpClient = GetTestClient(sendingServiceMock.Object);
-
-        var oneTimePasswordRequest = new OneTimePasswordRequest
-        {
-            Sender = "TestService",
-            Message = "OTP: 123456",
-            Recipient = "+4799999999",
-            NotificationId = Guid.NewGuid(),
-        };
-
-        // Act
-        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-        var responseBody = await response.Content.ReadAsStringAsync();
-        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
-
-        Assert.NotNull(problemDetails);
-        Assert.Equal(400, problemDetails.Status);
-        Assert.Equal("Invalid SMS request", problemDetails.Title);
-        Assert.Equal("The request could not be processed due to invalid input or state.", problemDetails.Detail);
-    }
-
-    [Fact]
     public async Task Send_WhenSendingServiceFails_ReturnsBadRequest()
     {
         // Arrange
         var notificationId = Guid.NewGuid();
 
         var sendingServiceMock = new Mock<ISendingService>();
-        sendingServiceMock
-            .Setup(e => e.SendAsync(It.IsAny<Core.Sending.Sms>()))
-            .ThrowsAsync(new InvalidOperationException("Failed to send SMS due to invalid gateway configuration"));
+        sendingServiceMock.Setup(e => e.SendAsync(It.IsAny<Core.Sending.Sms>())).ThrowsAsync(new InvalidOperationException());
 
-        var httpClient = GetTestClient(sendingServiceMock.Object);
         var oneTimePasswordRequest = new OneTimePasswordRequest
         {
             Sender = "TestService",
@@ -144,6 +103,8 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
             NotificationId = notificationId,
             Message = "Your one time password is: 2A31519EC7C6",
         };
+
+        var httpClient = GetTestClient(sendingServiceMock.Object);
 
         // Act
         var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
@@ -165,11 +126,8 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         var notificationId = Guid.NewGuid();
 
         var sendingServiceMock = new Mock<ISendingService>();
-        sendingServiceMock
-            .Setup(e => e.SendAsync(It.Is<Core.Sending.Sms>(e => e.NotificationId == notificationId)))
-            .Returns(Task.CompletedTask);
+        sendingServiceMock.Setup(e => e.SendAsync(It.Is<Core.Sending.Sms>(e => e.NotificationId == notificationId))).Returns(Task.CompletedTask);
 
-        var httpClient = GetTestClient(sendingServiceMock.Object);
         var oneTimePasswordRequest = new OneTimePasswordRequest
         {
             Sender = "TestService",
@@ -177,6 +135,8 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
             NotificationId = notificationId,
             Message = "Your one time password is: 2A31519EC7C6",
         };
+
+        var httpClient = GetTestClient(sendingServiceMock.Object);
 
         // Act
         var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
