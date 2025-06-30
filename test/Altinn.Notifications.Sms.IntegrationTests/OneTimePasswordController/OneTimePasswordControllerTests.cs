@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
@@ -200,6 +201,20 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         Assert.NotNull(sendingResponse);
         Assert.Equal(gatewayReference, sendingResponse.GatewayReference);
         Assert.Equal(oneTimePasswordRequest.NotificationId, sendingResponse.NotificationId);
+    }
+
+    [Fact]
+    public void OneTimePasswordController_HasApiExplorerSettingsWithIgnoreApiTrue()
+    {
+        // Arrange
+        var controllerType = typeof(Controllers.OneTimePasswordController);
+
+        // Act
+        var attribute = controllerType.GetCustomAttribute<ApiExplorerSettingsAttribute>();
+
+        // Assert
+        Assert.NotNull(attribute);
+        Assert.True(attribute.IgnoreApi);
     }
 
     private HttpClient GetTestClient(ISendingService sendingService)
