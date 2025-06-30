@@ -32,7 +32,7 @@ public class SendingService : ISendingService
     {
         Result<string, SmsClientErrorResponse> result = await _smsClient.SendAsync(sms);
 
-        SendOperationResult operationResult = new SendOperationResult()
+        SendOperationResult operationResult = new SendOperationResult
         {
             NotificationId = sms.NotificationId,
         };
