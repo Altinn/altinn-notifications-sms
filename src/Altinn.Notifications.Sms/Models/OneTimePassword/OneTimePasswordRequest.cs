@@ -9,7 +9,7 @@ namespace Altinn.Notifications.Sms.Models.OneTimePassword;
 public record OneTimePasswordRequest
 {
     /// <summary>
-    /// The message content containing the one-time password to be sent.
+    /// The message content containing the one-time password.
     /// </summary>
     [Required]
     [JsonPropertyName("message")]
