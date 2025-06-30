@@ -60,14 +60,16 @@ public class SendingService : ISendingService
         var result = await _smsClient.SendAsync(sms);
 
         var outcome = result.Match(
-            success: _ => new OneTimePasswordOutcome
+            gatewayReference => new OneTimePasswordOutcome
             {
                 IsAccepted = true,
+                GatewayReference = gatewayReference,
                 NotificationId = oneTimePasswordPayload.NotificationId
             },
-            failure: _ => new OneTimePasswordOutcome
+            _ => new OneTimePasswordOutcome
             {
                 IsAccepted = false,
+                GatewayReference = string.Empty,
                 NotificationId = oneTimePasswordPayload.NotificationId
             });
 

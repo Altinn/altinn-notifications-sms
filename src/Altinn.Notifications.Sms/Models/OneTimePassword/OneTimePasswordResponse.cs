@@ -8,13 +8,10 @@ namespace Altinn.Notifications.Sms.Models.OneTimePassword;
 public record OneTimePasswordResponse
 {
     /// <summary>
-    /// Indicates whether the SMS was accepted for delivery.
+    /// The unique reference or identifier assigned by the SMS gateway.
     /// </summary>
-    /// <value>
-    /// <c>true</c> if the SMS was accepted for delivery; otherwise, <c>false</c>.
-    /// </value>
-    [JsonPropertyName("isAccepted")]
-    public required bool IsAccepted { get; init; }
+    [JsonPropertyName("gatewayReference")]
+    public required string? GatewayReference { get; init; }
 
     /// <summary>
     /// The unique identifier of the SMS notification.

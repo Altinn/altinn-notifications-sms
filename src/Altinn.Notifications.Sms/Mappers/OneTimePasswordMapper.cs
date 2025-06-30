@@ -33,8 +33,8 @@ public static class OneTimePasswordMapper
     {
         return new OneTimePasswordResponse
         {
-            IsAccepted = outcome.IsAccepted,
-            NotificationId = outcome.NotificationId
+            NotificationId = outcome.NotificationId,
+            GatewayReference = outcome.GatewayReference
         };
     }
 }
