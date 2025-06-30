@@ -2,7 +2,6 @@
 using Altinn.Notifications.Sms.Core.Dependencies;
 using Altinn.Notifications.Sms.Core.Sending;
 using Altinn.Notifications.Sms.Core.Status;
-
 using Moq;
 
 namespace Altinn.Notifications.Sms.Tests.Sms.Core.Sending;
@@ -73,5 +72,4 @@ public class SendingServiceTests
         // Assert
         producerMock.VerifyAll();
     }
-
 }
