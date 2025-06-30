@@ -132,6 +132,41 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         Assert.Equal(400, problemDetails.Status);
     }
 
+    [Fact]
+    public async Task Send_WhenRequestIsCanceled_Returns499ClientClosedRequest()
+    {
+        // Arrange
+        using var cancellationTokenSource = new CancellationTokenSource();
+
+        var sendingServiceMock = new Mock<ISendingService>();
+        sendingServiceMock
+            .Setup(s => s.SendAsync(It.IsAny<OneTimePasswordPayload>()))
+            .ThrowsAsync(new OperationCanceledException());
+
+        var httpClient = GetTestClient(sendingServiceMock.Object);
+
+        var oneTimePasswordRequest = new OneTimePasswordRequest
+        {
+            Sender = "TestService",
+            Message = "OTP: 088E863A",
+            Recipient = "+4799999999",
+            NotificationId = Guid.NewGuid(),
+        };
+
+        // Act
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest, cancellationTokenSource.Token);
+
+        // Assert
+        Assert.Equal((HttpStatusCode)499, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
+
+        Assert.NotNull(problemDetails);
+        Assert.Equal(499, problemDetails.Status);
+        Assert.Contains("Request terminated", problemDetails.Title, StringComparison.OrdinalIgnoreCase);
+    }
+
     private HttpClient GetTestClient(ISendingService sendingService)
     {
         return _factory.WithWebHostBuilder(builder =>
