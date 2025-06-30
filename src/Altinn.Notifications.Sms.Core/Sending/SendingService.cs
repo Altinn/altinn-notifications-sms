@@ -1,5 +1,6 @@
 ﻿using Altinn.Notifications.Sms.Core.Configuration;
 using Altinn.Notifications.Sms.Core.Dependencies;
+using Altinn.Notifications.Sms.Core.OneTimePassword;
 using Altinn.Notifications.Sms.Core.Shared;
 using Altinn.Notifications.Sms.Core.Status;
 
@@ -17,14 +18,11 @@ public class SendingService : ISendingService
     /// <summary>
     /// Initializes a new instance of the <see cref="SendingService"/> class.
     /// </summary>
-    /// <param name="smsClient">A client that can perform actual sms sending.</param>
-    /// <param name="producer">A kafka producer.</param>
-    /// <param name="settings">The topic settings.</param>
     public SendingService(ISmsClient smsClient, ICommonProducer producer, TopicSettings settings)
     {
-        _smsClient = smsClient;
         _producer = producer;
         _settings = settings;
+        _smsClient = smsClient;
     }
 
     /// <inheritdoc/>
@@ -32,7 +30,7 @@ public class SendingService : ISendingService
     {
         Result<string, SmsClientErrorResponse> result = await _smsClient.SendAsync(sms);
 
-        SendOperationResult operationResult = new SendOperationResult
+        SendOperationResult operationResult = new()
         {
             NotificationId = sms.NotificationId,
         };
@@ -52,5 +50,27 @@ public class SendingService : ISendingService
 
                 await _producer.ProduceAsync(_settings.SmsStatusUpdatedTopicName, operationResult.Serialize());
             });
+    }
+
+    /// <inheritdoc/>
+    public async Task<OneTimePasswordOutcome> SendAsync(OneTimePasswordPayload oneTimePasswordPayload)
+    {
+        var sms = new Sms(oneTimePasswordPayload.NotificationId, oneTimePasswordPayload.Sender, oneTimePasswordPayload.Recipient, oneTimePasswordPayload.Message);
+
+        var result = await _smsClient.SendAsync(sms);
+
+        var outcome = result.Match(
+            success: _ => new OneTimePasswordOutcome
+            {
+                IsAccepted = true,
+                NotificationId = oneTimePasswordPayload.NotificationId
+            },
+            failure: _ => new OneTimePasswordOutcome
+            {
+                IsAccepted = false,
+                NotificationId = oneTimePasswordPayload.NotificationId
+            });
+
+        return outcome;
     }
 }

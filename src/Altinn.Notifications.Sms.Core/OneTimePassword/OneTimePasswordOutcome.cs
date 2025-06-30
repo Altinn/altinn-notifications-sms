@@ -1,11 +1,9 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Altinn.Notifications.Sms.Models.OneTimePassword;
+﻿namespace Altinn.Notifications.Sms.Core.OneTimePassword;
 
 /// <summary>
-/// Represents a response model for sending a one-time password (OTP) via SMS.
+/// Represents a domain model for sending a one-time password (OTP) via SMS.
 /// </summary>
-public record OneTimePasswordResponse
+public record OneTimePasswordOutcome
 {
     /// <summary>
     /// Indicates whether the SMS was accepted for delivery.
@@ -13,12 +11,10 @@ public record OneTimePasswordResponse
     /// <value>
     /// <c>true</c> if the SMS was accepted for delivery; otherwise, <c>false</c>.
     /// </value>
-    [JsonPropertyName("isAccepted")]
     public required bool IsAccepted { get; init; }
 
     /// <summary>
     /// The unique identifier of the SMS notification.
     /// </summary>
-    [JsonPropertyName("notificationId")]
     public required Guid NotificationId { get; init; }
 }
