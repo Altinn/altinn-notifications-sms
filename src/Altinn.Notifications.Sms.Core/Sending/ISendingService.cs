@@ -1,14 +1,14 @@
 namespace Altinn.Notifications.Sms.Core.Sending;
 
 /// <summary>
-/// Defines operations for sending SMS messages.
+/// Describes the required public method of the sms service.
 /// </summary>
 public interface ISendingService
 {
     /// <summary>
-    /// Sends a standard SMS message.
+    /// Send an sms
     /// </summary>
-    /// <param name="sms">The SMS message to be sent.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <param name="sms">The details for an sms to be sent.</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     Task SendAsync(Sms sms);
 }

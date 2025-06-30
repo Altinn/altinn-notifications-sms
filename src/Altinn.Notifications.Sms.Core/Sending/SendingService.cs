@@ -17,11 +17,14 @@ public class SendingService : ISendingService
     /// <summary>
     /// Initializes a new instance of the <see cref="SendingService"/> class.
     /// </summary>
+    /// <param name="smsClient">A client that can perform actual sms sending.</param>
+    /// <param name="producer">A kafka producer.</param>
+    /// <param name="settings">The topic settings.</param>
     public SendingService(ISmsClient smsClient, ICommonProducer producer, TopicSettings settings)
     {
+        _smsClient = smsClient;
         _producer = producer;
         _settings = settings;
-        _smsClient = smsClient;
     }
 
     /// <inheritdoc/>
@@ -29,7 +32,7 @@ public class SendingService : ISendingService
     {
         Result<string, SmsClientErrorResponse> result = await _smsClient.SendAsync(sms);
 
-        SendOperationResult operationResult = new()
+        SendOperationResult operationResult = new SendOperationResult()
         {
             NotificationId = sms.NotificationId,
         };
