@@ -31,9 +31,6 @@ public class OneTimePasswordController : ControllerBase
     /// <param name="request">
     /// The <see cref="OneTimePasswordRequest"/> containing the OTP, recipient phone number, sender identity, and notification ID.
     /// </param>
-    /// <param name="cancellationToken">
-    /// A <see cref="CancellationToken"/> that can be used to cancel the operation before completion.
-    /// </param>
     /// <returns>
     /// Returns 200 (OK) when the SMS was successfully accepted by the service provider.
     /// Returns 400 (Bad Request) with <see cref="ProblemDetails"/> when the request is invalid or contains improper formatting.
@@ -45,11 +42,11 @@ public class OneTimePasswordController : ControllerBase
     [SwaggerResponse(200, "The SMS was accepted by the service provider.")]
     [SwaggerResponse(400, "The request was invalid.", typeof(ProblemDetails))]
     [SwaggerResponse(499, "The request was canceled before processing could complete.", typeof(ProblemDetails))]
-    public async Task<ActionResult> Send([FromBody] OneTimePasswordRequest request, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> Send([FromBody] OneTimePasswordRequest request)
     {
         try
         {
-            var sms = new Core.Sending.Sms
+            var smsDataModel = new Core.Sending.Sms
             {
                 Sender = request.Sender,
                 Message = request.Message,
@@ -57,7 +54,7 @@ public class OneTimePasswordController : ControllerBase
                 NotificationId = request.NotificationId
             };
 
-            await _sendingService.SendAsync(sms);
+            await _sendingService.SendAsync(smsDataModel);
 
             return Ok();
         }
