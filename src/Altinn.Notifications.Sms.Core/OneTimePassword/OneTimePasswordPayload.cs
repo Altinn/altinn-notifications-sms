@@ -6,7 +6,7 @@
 public record OneTimePasswordPayload
 {
     /// <summary>
-    /// The message content containing the one-time password to be sent.
+    /// The message content containing the one-time password.
     /// </summary>
     public required string Message { get; init; }
 
