@@ -25,43 +25,38 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     }
 
     [Fact]
-    public async Task Send_WithValidRequest_ReturnsOkAndPopulatedResponse()
+    public async Task Send_WhenRequestIsCanceled_Returns499ClientClosedRequest()
     {
         // Arrange
-        var notificationId = Guid.NewGuid();
-        var gatewayReference = "F5F70413-218F-4BD0-AC0A-CFF0BE9A8662";
+        using var cancellationTokenSource = new CancellationTokenSource();
 
         var sendingServiceMock = new Mock<ISendingService>();
         sendingServiceMock
-            .Setup(e => e.SendAsync(It.Is<OneTimePasswordPayload>(e => e.NotificationId == notificationId)))
-            .ReturnsAsync((OneTimePasswordPayload payload) =>
-                new OneTimePasswordOutcome
-                {
-                    GatewayReference = gatewayReference,
-                    NotificationId = payload.NotificationId,
-                });
+            .Setup(s => s.SendAsync(It.IsAny<OneTimePasswordPayload>()))
+            .ThrowsAsync(new OperationCanceledException());
 
         var httpClient = GetTestClient(sendingServiceMock.Object);
+
         var oneTimePasswordRequest = new OneTimePasswordRequest
         {
             Sender = "TestService",
+            Message = "OTP: 088E863A",
             Recipient = "+4799999999",
-            NotificationId = notificationId,
-            Message = "Your one time password is: 2A31519EC7C6",
+            NotificationId = Guid.NewGuid(),
         };
 
         // Act
-        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest, cancellationTokenSource.Token);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal((HttpStatusCode)499, response.StatusCode);
 
         var responseBody = await response.Content.ReadAsStringAsync();
-        var sendingResponse = JsonSerializer.Deserialize<OneTimePasswordResponse>(responseBody, _jsonOptions);
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
 
-        Assert.NotNull(sendingResponse);
-        Assert.Equal(gatewayReference, sendingResponse.GatewayReference);
-        Assert.Equal(oneTimePasswordRequest.NotificationId, sendingResponse.NotificationId);
+        Assert.NotNull(problemDetails);
+        Assert.Equal(499, problemDetails.Status);
+        Assert.Contains("Request terminated", problemDetails.Title, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -133,38 +128,43 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     }
 
     [Fact]
-    public async Task Send_WhenRequestIsCanceled_Returns499ClientClosedRequest()
+    public async Task Send_WithValidRequest_ReturnsOkAndPopulatedResponse()
     {
         // Arrange
-        using var cancellationTokenSource = new CancellationTokenSource();
+        var notificationId = Guid.NewGuid();
+        var gatewayReference = "F5F70413-218F-4BD0-AC0A-CFF0BE9A8662";
 
         var sendingServiceMock = new Mock<ISendingService>();
         sendingServiceMock
-            .Setup(s => s.SendAsync(It.IsAny<OneTimePasswordPayload>()))
-            .ThrowsAsync(new OperationCanceledException());
+            .Setup(e => e.SendAsync(It.Is<OneTimePasswordPayload>(e => e.NotificationId == notificationId)))
+            .ReturnsAsync((OneTimePasswordPayload payload) =>
+                new OneTimePasswordOutcome
+                {
+                    GatewayReference = gatewayReference,
+                    NotificationId = payload.NotificationId,
+                });
 
         var httpClient = GetTestClient(sendingServiceMock.Object);
-
         var oneTimePasswordRequest = new OneTimePasswordRequest
         {
             Sender = "TestService",
-            Message = "OTP: 088E863A",
             Recipient = "+4799999999",
-            NotificationId = Guid.NewGuid(),
+            NotificationId = notificationId,
+            Message = "Your one time password is: 2A31519EC7C6",
         };
 
         // Act
-        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest, cancellationTokenSource.Token);
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
 
         // Assert
-        Assert.Equal((HttpStatusCode)499, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var responseBody = await response.Content.ReadAsStringAsync();
-        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
+        var sendingResponse = JsonSerializer.Deserialize<OneTimePasswordResponse>(responseBody, _jsonOptions);
 
-        Assert.NotNull(problemDetails);
-        Assert.Equal(499, problemDetails.Status);
-        Assert.Contains("Request terminated", problemDetails.Title, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(sendingResponse);
+        Assert.Equal(gatewayReference, sendingResponse.GatewayReference);
+        Assert.Equal(oneTimePasswordRequest.NotificationId, sendingResponse.NotificationId);
     }
 
     private HttpClient GetTestClient(ISendingService sendingService)
