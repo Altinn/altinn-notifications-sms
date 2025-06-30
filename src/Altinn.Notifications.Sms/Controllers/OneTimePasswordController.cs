@@ -51,22 +51,21 @@ namespace Altinn.Notifications.Sms.Controllers
         {
             try
             {
-                var domainPayloadModel = request.ToPayload();
+                var payload = request.ToPayload();
 
-                var oneTimePasswordSendingOutcome = await _sendingService.SendAsync(domainPayloadModel);
+                var outcome = await _sendingService.SendAsync(payload);
 
-                if (oneTimePasswordSendingOutcome.IsAccepted)
+                if (string.IsNullOrWhiteSpace(outcome.GatewayReference))
                 {
-                    var response = oneTimePasswordSendingOutcome.ToResponse();
-                    return Ok(response);
+                    return BadRequest(new ProblemDetails
+                    {
+                        Title = "SMS delivery failed",
+                        Status = StatusCodes.Status400BadRequest,
+                        Detail = "The service provider did not accept the SMS message"
+                    });
                 }
 
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "SMS delivery failed",
-                    Status = StatusCodes.Status400BadRequest,
-                    Detail = "The service provider did not accept the SMS message"
-                });
+                return Ok(outcome.ToResponse());
             }
             catch (InvalidOperationException)
             {

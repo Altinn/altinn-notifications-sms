@@ -62,14 +62,12 @@ public class SendingService : ISendingService
         var outcome = result.Match(
             gatewayReference => new OneTimePasswordOutcome
             {
-                IsAccepted = true,
                 GatewayReference = gatewayReference,
                 NotificationId = oneTimePasswordPayload.NotificationId
             },
             _ => new OneTimePasswordOutcome
             {
-                IsAccepted = false,
-                GatewayReference = string.Empty,
+                GatewayReference = null,
                 NotificationId = oneTimePasswordPayload.NotificationId
             });
 
