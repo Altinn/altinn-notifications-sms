@@ -1,5 +1,4 @@
 ﻿using Altinn.Notifications.Sms.Core.Sending;
-using Altinn.Notifications.Sms.Mappers;
 using Altinn.Notifications.Sms.Models.OneTimePassword;
 
 using Microsoft.AspNetCore.Mvc;
