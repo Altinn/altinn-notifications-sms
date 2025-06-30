@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 
 using Altinn.Notifications.Sms.Core.OneTimePassword;
@@ -74,7 +75,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         }
         """;
 
-        var content = new StringContent(invalidJson, System.Text.Encoding.UTF8, "application/json");
+        var content = new StringContent(invalidJson, Encoding.UTF8, "application/json");
 
         // Act
         var response = await httpClient.PostAsync("/notifications/sms/api/v1/otp", content);
@@ -88,6 +89,40 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         Assert.NotNull(problemDetails);
         Assert.Equal(400, problemDetails.Status);
         Assert.Equal("One or more validation errors occurred.", problemDetails.Title);
+    }
+
+    [Fact]
+    public async Task Send_WhenSendingServiceThrowsInvalidOperationException_ReturnsBadRequest()
+    {
+        // Arrange
+        var sendingServiceMock = new Mock<ISendingService>();
+        sendingServiceMock
+            .Setup(s => s.SendAsync(It.IsAny<OneTimePasswordPayload>()))
+            .ThrowsAsync(new InvalidOperationException());
+
+        var httpClient = GetTestClient(sendingServiceMock.Object);
+
+        var oneTimePasswordRequest = new OneTimePasswordRequest
+        {
+            Sender = "TestService",
+            Message = "OTP: 123456",
+            Recipient = "+4799999999",
+            NotificationId = Guid.NewGuid(),
+        };
+
+        // Act
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
+
+        Assert.NotNull(problemDetails);
+        Assert.Equal(400, problemDetails.Status);
+        Assert.Equal("Invalid SMS request", problemDetails.Title);
+        Assert.Equal("The request could not be processed due to invalid input or state.", problemDetails.Detail);
     }
 
     [Fact]
