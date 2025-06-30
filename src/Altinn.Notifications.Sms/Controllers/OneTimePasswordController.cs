@@ -50,7 +50,13 @@ public class OneTimePasswordController : ControllerBase
     {
         try
         {
-            var sms = request.ToSms();
+            var sms = new Core.Sending.Sms
+            {
+                Sender = request.Sender,
+                Message = request.Message,
+                Recipient = request.Recipient,
+                NotificationId = request.NotificationId
+            };
 
             await _sendingService.SendAsync(sms);
 
