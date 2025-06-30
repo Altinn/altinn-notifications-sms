@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
-using Altinn.Notifications.Sms.Core.OneTimePassword;
 using Altinn.Notifications.Sms.Core.Sending;
 using Altinn.Notifications.Sms.Models.OneTimePassword;
 
@@ -34,7 +33,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
 
         var sendingServiceMock = new Mock<ISendingService>();
         sendingServiceMock
-            .Setup(s => s.SendAsync(It.IsAny<OneTimePasswordPayload>()))
+            .Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()))
             .ThrowsAsync(new OperationCanceledException());
 
         var httpClient = GetTestClient(sendingServiceMock.Object);
@@ -98,7 +97,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
         sendingServiceMock
-            .Setup(s => s.SendAsync(It.IsAny<OneTimePasswordPayload>()))
+            .Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()))
             .ThrowsAsync(new InvalidOperationException());
 
         var httpClient = GetTestClient(sendingServiceMock.Object);
@@ -127,19 +126,15 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     }
 
     [Fact]
-    public async Task Send_WithNullGatewayReference_ReturnsBadRequest()
+    public async Task Send_WhenSendingServiceFails_ReturnsBadRequest()
     {
         // Arrange
         var notificationId = Guid.NewGuid();
 
         var sendingServiceMock = new Mock<ISendingService>();
         sendingServiceMock
-            .Setup(e => e.SendAsync(It.IsAny<OneTimePasswordPayload>()))
-            .ReturnsAsync(new OneTimePasswordOutcome
-            {
-                GatewayReference = null,
-                NotificationId = notificationId,
-            });
+            .Setup(e => e.SendAsync(It.IsAny<Core.Sending.Sms>()))
+            .ThrowsAsync(new InvalidOperationException("Failed to send SMS due to invalid gateway configuration"));
 
         var httpClient = GetTestClient(sendingServiceMock.Object);
         var oneTimePasswordRequest = new OneTimePasswordRequest
@@ -164,21 +159,15 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     }
 
     [Fact]
-    public async Task Send_WithValidRequest_ReturnsOkAndPopulatedResponse()
+    public async Task Send_WithValidRequest_ReturnsOk()
     {
         // Arrange
         var notificationId = Guid.NewGuid();
-        var gatewayReference = "F5F70413-218F-4BD0-AC0A-CFF0BE9A8662";
 
         var sendingServiceMock = new Mock<ISendingService>();
         sendingServiceMock
-            .Setup(e => e.SendAsync(It.Is<OneTimePasswordPayload>(e => e.NotificationId == notificationId)))
-            .ReturnsAsync((OneTimePasswordPayload payload) =>
-                new OneTimePasswordOutcome
-                {
-                    GatewayReference = gatewayReference,
-                    NotificationId = payload.NotificationId,
-                });
+            .Setup(e => e.SendAsync(It.Is<Core.Sending.Sms>(e => e.NotificationId == notificationId)))
+            .Returns(Task.CompletedTask);
 
         var httpClient = GetTestClient(sendingServiceMock.Object);
         var oneTimePasswordRequest = new OneTimePasswordRequest
@@ -194,13 +183,6 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var responseBody = await response.Content.ReadAsStringAsync();
-        var sendingResponse = JsonSerializer.Deserialize<OneTimePasswordResponse>(responseBody, _jsonOptions);
-
-        Assert.NotNull(sendingResponse);
-        Assert.Equal(gatewayReference, sendingResponse.GatewayReference);
-        Assert.Equal(oneTimePasswordRequest.NotificationId, sendingResponse.NotificationId);
     }
 
     [Fact]

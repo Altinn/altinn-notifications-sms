@@ -1,9 +1,8 @@
 ﻿using Altinn.Notifications.Sms.Core.Configuration;
 using Altinn.Notifications.Sms.Core.Dependencies;
-using Altinn.Notifications.Sms.Core.OneTimePassword;
 using Altinn.Notifications.Sms.Core.Sending;
-using Altinn.Notifications.Sms.Core.Shared;
 using Altinn.Notifications.Sms.Core.Status;
+
 using Moq;
 
 namespace Altinn.Notifications.Sms.Tests.Sms.Core.Sending;
@@ -75,67 +74,4 @@ public class SendingServiceTests
         producerMock.VerifyAll();
     }
 
-    [Fact]
-    public async Task SendAsync_WithValidOneTimePasswordPayload_ReturnsOutcomeWithGatewayReference()
-    {
-        // Arrange
-        var payload = new OneTimePasswordPayload
-        {
-            Recipient = "+4799999999",
-            Sender = "SendingServiceTests",
-            NotificationId = Guid.NewGuid(),
-            Message = "Your one time password is: 77E5C2839CE8",
-        };
-
-        var expectedGatewayReference = "62D69E4D-52E4-4514-BEE0-7179D9CB61BB";
-
-        var smsClientMock = new Mock<ISmsClient>();
-        smsClientMock
-            .Setup(c => c.SendAsync(It.IsAny<Notifications.Sms.Core.Sending.Sms>()))
-            .ReturnsAsync(expectedGatewayReference);
-
-        var service = new SendingService(smsClientMock.Object, Mock.Of<ICommonProducer>(), new TopicSettings());
-
-        // Act
-        var result = await service.SendAsync(payload);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(payload.NotificationId, result.NotificationId);
-        Assert.Equal(expectedGatewayReference, result.GatewayReference);
-    }
-
-    [Fact]
-    public async Task SendAsync_WithInvalidOneTimePasswordPayload_ReturnsOutcomeWithNullGatewayReference()
-    {
-        // Arrange
-        var payload = new OneTimePasswordPayload
-        {
-            Recipient = string.Empty,
-            Sender = "SendingServiceTests",
-            NotificationId = Guid.NewGuid(),
-            Message = "Your one time password is: 2855D8C460A9",
-        };
-
-        var errorResponse = new SmsClientErrorResponse
-        {
-            ErrorMessage = "Some error",
-            SendResult = SmsSendResult.Failed
-        };
-
-        var smsClientMock = new Mock<ISmsClient>();
-        smsClientMock
-            .Setup(c => c.SendAsync(It.IsAny<Notifications.Sms.Core.Sending.Sms>()))
-            .ReturnsAsync(errorResponse);
-
-        var service = new SendingService(smsClientMock.Object, Mock.Of<ICommonProducer>(), new TopicSettings());
-
-        // Act
-        var result = await service.SendAsync(payload);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Null(result.GatewayReference);
-        Assert.Equal(payload.NotificationId, result.NotificationId);
-    }
 }

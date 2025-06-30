@@ -30,41 +30,31 @@ public class OneTimePasswordController : ControllerBase
     /// Sends a one-time password (OTP) via SMS to the specified recipient.
     /// </summary>
     /// <param name="request">
-    /// The <see cref="OneTimePasswordRequest"/> containing the OTP, recipient phone number, sender, and notification ID.
+    /// The <see cref="OneTimePasswordRequest"/> containing the OTP, recipient phone number, sender identity, and notification ID.
     /// </param>
     /// <param name="cancellationToken">
-    /// A <see cref="CancellationToken"/> that can be used by the client to cancel the operation before completion.
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation before completion.
     /// </param>
     /// <returns>
-    /// Returns <see cref="OneTimePasswordResponse"/> with status 200 (OK) if the SMS was accepted by the service provider.
-    /// Returns <see cref="ProblemDetails"/> with status 400 (Bad Request) if the request is invalid.
-    /// Returns <see cref="ProblemDetails"/> with status 499 if the request was canceled before processing could complete.
+    /// Returns 200 (OK) when the SMS was successfully accepted by the service provider.
+    /// Returns 400 (Bad Request) with <see cref="ProblemDetails"/> when the request is invalid or contains improper formatting.
+    /// Returns 499 (Client Closed Request) with <see cref="ProblemDetails"/> when the client cancels the request before completion.
     /// </returns>
     [HttpPost]
     [Consumes("application/json")]
     [Produces("application/json")]
+    [SwaggerResponse(200, "The SMS was accepted by the service provider.")]
     [SwaggerResponse(400, "The request was invalid.", typeof(ProblemDetails))]
-    [SwaggerResponse(200, "The SMS was accepted by the service provider.", typeof(OneTimePasswordResponse))]
     [SwaggerResponse(499, "The request was canceled before processing could complete.", typeof(ProblemDetails))]
-    public async Task<ActionResult<OneTimePasswordResponse>> Send([FromBody] OneTimePasswordRequest request, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> Send([FromBody] OneTimePasswordRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var payload = request.ToPayload();
+            var sms = request.ToSms();
 
-            var sendingOutcome = await _sendingService.SendAsync(payload);
+            await _sendingService.SendAsync(sms);
 
-            if (string.IsNullOrWhiteSpace(sendingOutcome.GatewayReference))
-            {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "SMS delivery failed",
-                    Status = StatusCodes.Status400BadRequest,
-                    Detail = "The service provider did not accept the SMS message"
-                });
-            }
-
-            return Ok(sendingOutcome.ToResponse());
+            return Ok();
         }
         catch (InvalidOperationException)
         {

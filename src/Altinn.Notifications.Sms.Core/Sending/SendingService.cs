@@ -1,6 +1,5 @@
 ﻿using Altinn.Notifications.Sms.Core.Configuration;
 using Altinn.Notifications.Sms.Core.Dependencies;
-using Altinn.Notifications.Sms.Core.OneTimePassword;
 using Altinn.Notifications.Sms.Core.Shared;
 using Altinn.Notifications.Sms.Core.Status;
 
@@ -50,27 +49,5 @@ public class SendingService : ISendingService
 
                 await _producer.ProduceAsync(_settings.SmsStatusUpdatedTopicName, operationResult.Serialize());
             });
-    }
-
-    /// <inheritdoc/>
-    public async Task<OneTimePasswordOutcome> SendAsync(OneTimePasswordPayload oneTimePasswordPayload)
-    {
-        var sms = new Sms(oneTimePasswordPayload.NotificationId, oneTimePasswordPayload.Sender, oneTimePasswordPayload.Recipient, oneTimePasswordPayload.Message);
-
-        var result = await _smsClient.SendAsync(sms);
-
-        var outcome = result.Match(
-            gatewayReference => new OneTimePasswordOutcome
-            {
-                GatewayReference = gatewayReference,
-                NotificationId = oneTimePasswordPayload.NotificationId
-            },
-            _ => new OneTimePasswordOutcome
-            {
-                GatewayReference = null,
-                NotificationId = oneTimePasswordPayload.NotificationId
-            });
-
-        return outcome;
     }
 }
