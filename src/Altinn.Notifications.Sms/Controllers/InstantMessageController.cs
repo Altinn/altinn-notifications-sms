@@ -8,7 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Altinn.Notifications.Sms.Controllers;
 
 /// <summary>
-/// Controller for sending instant SMS messages.
+/// Controller for sending instant short messages.
 /// </summary>
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
@@ -30,14 +30,14 @@ public class InstantMessageController : ControllerBase
     /// </summary>
     /// <param name="request">The request containing message content, recipient, sender, notification ID, and time-to-live.</param>
     /// <returns>
-    /// Returns 200 (OK) when the SMS was successfully accepted by the service provider.
+    /// Returns 200 (OK) when the short message was successfully accepted by the service provider.
     /// Returns 400 (Bad Request) with <see cref="ProblemDetails"/> when the request is invalid or contains improper formatting.
     /// Returns 499 (Client Closed Request) with <see cref="ProblemDetails"/> when the client cancels the request before completion.
     /// </returns>
     [HttpPost("send")]
     [Consumes("application/json")]
     [Produces("application/json")]
-    [SwaggerResponse(200, "The SMS was accepted by the service provider.")]
+    [SwaggerResponse(200, "The message was accepted by the service provider.")]
     [SwaggerResponse(400, "The request was invalid.", typeof(ProblemDetails))]
     [SwaggerResponse(499, "The request was canceled before processing could complete.", typeof(ProblemDetails))]
     public async Task<IActionResult> Send([FromBody] InstantMessageRequest request)
@@ -73,7 +73,7 @@ public class InstantMessageController : ControllerBase
     /// <summary>
     /// Maps an <see cref="InstantMessageRequest"/> to the <see cref="Core.Sending.Sms"/> domain model.
     /// </summary>
-    /// <param name="request">The incoming request containing SMS details such as sender, message, recipient, and notification ID.</param>
+    /// <param name="request">The incoming request containing sender, message, recipient, notification ID, and time-to-live.</param>
     /// <returns>A <see cref="Core.Sending.Sms"/> object populated with values from the request.</returns>
     private static Core.Sending.Sms MapToSms(InstantMessageRequest request)
     {
