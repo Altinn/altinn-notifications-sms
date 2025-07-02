@@ -46,7 +46,7 @@ public class SmsClient : ISmsClient
     /// <summary>
     /// Creates a LinkMobility SMS model from the core SMS and time-to-live.
     /// </summary>
-    /// <param name="sms">The core SMS message containing sender, recipient, and message content.</param>
+    /// <param name="sms">The core SMS message containing message, recipient, sender, and notification ID.</param>
     /// <param name="timeToLive">The time-to-live for the SMS message.</param>
     /// <returns>A configured <see cref="LinkMobilityModel.Sms"/> instance.</returns>
     private static LinkMobilityModel.Sms CreateLinkMobilitySms(Core.Sending.Sms sms, TimeSpan timeToLive)
@@ -63,7 +63,7 @@ public class SmsClient : ISmsClient
     /// <param name="linkMobilitySms">The LinkMobility SMS message to send.</param>
     /// <returns>
     /// A <see cref="Result{T, TError}"/> that represents the outcome of the send operation:
-    /// <list type="bullet">
+    /// <list type="table">
     ///   <item>On success: a unique string identifier for tracking the message.</item>
     ///   <item>On failure: a <see cref="SmsClientErrorResponse"/> providing details about the error.</item>
     /// </list>
