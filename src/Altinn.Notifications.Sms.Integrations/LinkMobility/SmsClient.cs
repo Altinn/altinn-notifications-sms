@@ -32,7 +32,7 @@ public class SmsClient : ISmsClient
     {
         var linkMobilitySms = CreateLinkMobilitySms(sms, TimeSpan.FromHours(DefaultTimeToLiveInHours));
 
-        return await SendAsync(linkMobilitySms);
+        return await SendToLinkMobilityAsync(linkMobilitySms);
     }
 
     /// <inheritdoc />
@@ -40,7 +40,7 @@ public class SmsClient : ISmsClient
     {
         var linkMobilitySms = CreateLinkMobilitySms(sms, TimeSpan.FromSeconds(timeToLiveInSeconds));
 
-        return await SendAsync(linkMobilitySms);
+        return await SendToLinkMobilityAsync(linkMobilitySms);
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ public class SmsClient : ISmsClient
     ///   <item>On failure: a <see cref="SmsClientErrorResponse"/> providing details about the error.</item>
     /// </list>
     /// </returns>
-    private async Task<Result<string, SmsClientErrorResponse>> SendAsync(LinkMobilityModel.Sms linkMobilitySms)
+    private async Task<Result<string, SmsClientErrorResponse>> SendToLinkMobilityAsync(LinkMobilityModel.Sms linkMobilitySms)
     {
         var result = await _client.SendAsync(linkMobilitySms);
 
