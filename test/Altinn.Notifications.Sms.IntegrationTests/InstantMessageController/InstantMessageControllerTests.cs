@@ -181,5 +181,4 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
             });
         }).CreateClient();
     }
-
 }
