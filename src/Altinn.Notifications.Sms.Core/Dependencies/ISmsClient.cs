@@ -26,7 +26,7 @@ public interface ISmsClient
     Task<Result<string, SmsClientErrorResponse>> SendAsync(Sending.Sms sms);
 
     /// <summary>
-    /// Sends an SMS message to a specified recipient, allowing for a configurable time-to-live (TTL).
+    /// Sends an SMS message to a specified recipient using a custom time-to-live (TTL).
     /// </summary>
     /// <param name="sms">An instance of <see cref="Sending.Sms"/> containing the recipient, sender, and message content.</param>
     /// <param name="timeToLiveInSeconds">
