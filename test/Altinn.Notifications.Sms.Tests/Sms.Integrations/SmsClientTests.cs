@@ -1,5 +1,4 @@
 ﻿using Altinn.Notifications.Sms.Core.Status;
-
 using Altinn.Notifications.Sms.Integrations.LinkMobility;
 
 using LinkMobility.PSWin.Client.Model;
