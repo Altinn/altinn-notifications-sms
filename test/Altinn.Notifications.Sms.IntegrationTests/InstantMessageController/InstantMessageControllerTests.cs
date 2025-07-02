@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 
 using Altinn.Notifications.Sms.Core.Sending;
-using Altinn.Notifications.Sms.Models.OneTimePassword;
+using Altinn.Notifications.Sms.Models.InstantMessage;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
@@ -13,14 +13,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
 
-namespace Altinn.Notifications.Sms.IntegrationTests.OneTimePasswordController;
+namespace Altinn.Notifications.Sms.IntegrationTests.InstantMessageController;
 
-public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebApplicationFactory<Controllers.OneTimePasswordController>>
+public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApplicationFactory<Controllers.InstantMessageController>>
 {
-    private readonly IntegrationTestWebApplicationFactory<Controllers.OneTimePasswordController> _factory;
+    private readonly IntegrationTestWebApplicationFactory<Controllers.InstantMessageController> _factory;
     private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    public OneTimePasswordControllerTests(IntegrationTestWebApplicationFactory<Controllers.OneTimePasswordController> factory)
+    public InstantMessageControllerTests(IntegrationTestWebApplicationFactory<Controllers.InstantMessageController> factory)
     {
         _factory = factory;
     }
@@ -30,20 +30,21 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
-        sendingServiceMock.Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>())).ThrowsAsync(new OperationCanceledException());
+        sendingServiceMock.Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>(), It.IsAny<int>())).ThrowsAsync(new OperationCanceledException());
 
-        var oneTimePasswordRequest = new OneTimePasswordRequest
+        var instantMessageRequest = new InstantMessageRequest
         {
+            TimeToLive = 360,
             Sender = "TestService",
             Message = "OTP: 088E863A",
             Recipient = "+4799999999",
-            NotificationId = Guid.NewGuid(),
+            NotificationId = Guid.NewGuid()
         };
 
         var httpClient = GetTestClient(sendingServiceMock.Object);
 
         // Act
-        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/instantmessage/send", instantMessageRequest);
 
         // Assert
         Assert.Equal((HttpStatusCode)499, response.StatusCode);
@@ -66,6 +67,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         {
             "sender": "",
             "message": "",
+            "timeToLive": 0,
             "recipient": "",
             "notificationId": "00000000-0000-0000-0000-000000000000"
         }
@@ -74,7 +76,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         var content = new StringContent(invalidJson, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await httpClient.PostAsync("/notifications/sms/api/v1/otp", content);
+        var response = await httpClient.PostAsync("/notifications/sms/api/v1/instantmessage/send", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -94,10 +96,11 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         var notificationId = Guid.NewGuid();
 
         var sendingServiceMock = new Mock<ISendingService>();
-        sendingServiceMock.Setup(e => e.SendAsync(It.IsAny<Core.Sending.Sms>())).ThrowsAsync(new InvalidOperationException());
+        sendingServiceMock.Setup(e => e.SendAsync(It.IsAny<Core.Sending.Sms>(), It.IsAny<int>())).ThrowsAsync(new InvalidOperationException());
 
-        var oneTimePasswordRequest = new OneTimePasswordRequest
+        var instantMessageRequest = new InstantMessageRequest
         {
+            TimeToLive = 21600,
             Sender = "TestService",
             Recipient = "+4799999999",
             NotificationId = notificationId,
@@ -107,7 +110,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         var httpClient = GetTestClient(sendingServiceMock.Object);
 
         // Act
-        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/instantmessage/send", instantMessageRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -128,8 +131,9 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         var sendingServiceMock = new Mock<ISendingService>();
         sendingServiceMock.Setup(e => e.SendAsync(It.Is<Core.Sending.Sms>(e => e.NotificationId == notificationId))).Returns(Task.CompletedTask);
 
-        var oneTimePasswordRequest = new OneTimePasswordRequest
+        var oneTimePasswordRequest = new InstantMessageRequest
         {
+            TimeToLive = 7200,
             Sender = "TestService",
             Recipient = "+4799999999",
             NotificationId = notificationId,
@@ -139,7 +143,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
         var httpClient = GetTestClient(sendingServiceMock.Object);
 
         // Act
-        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/otp", oneTimePasswordRequest);
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/instantmessage/send", oneTimePasswordRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -149,7 +153,7 @@ public class OneTimePasswordControllerTests : IClassFixture<IntegrationTestWebAp
     public void OneTimePasswordController_HasApiExplorerSettingsWithIgnoreApiTrue()
     {
         // Arrange
-        var controllerType = typeof(Controllers.OneTimePasswordController);
+        var controllerType = typeof(Controllers.InstantMessageController);
 
         // Act
         var attribute = controllerType.GetCustomAttribute<ApiExplorerSettingsAttribute>();
