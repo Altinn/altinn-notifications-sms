@@ -26,6 +26,28 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
     }
 
     [Fact]
+    public async Task Send_NullRequest_ReturnsBadRequest()
+    {
+        // Arrange
+        var sendingServiceMock = new Mock<ISendingService>();
+        var httpClient = GetTestClient(sendingServiceMock.Object);
+        var content = new StringContent("null", Encoding.UTF8, "application/json");
+
+        // Act
+        var response = await httpClient.PostAsync("/notifications/sms/api/v1/instantmessage/send", content);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
+
+        Assert.NotNull(problemDetails);
+        Assert.Equal("Invalid instant SMS request", problemDetails.Title);
+        Assert.Equal("The request body cannot be null.", problemDetails.Detail);
+    }
+
+    [Fact]
     public async Task Send_WhenRequestIsCanceled_Returns499ClientClosedRequest()
     {
         // Arrange
@@ -58,18 +80,19 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
     }
 
     [Fact]
-    public async Task Send_WithInvalidFields_ReturnsBadRequestWithValidationError()
+    public async Task Send_WithInvalidSender_ReturnsBadRequestWithValidationError()
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
         var httpClient = GetTestClient(sendingServiceMock.Object);
+
         var invalidJson = """
         {
             "sender": "",
-            "message": "",
-            "timeToLive": 0,
-            "recipient": "",
-            "notificationId": "00000000-0000-0000-0000-000000000000"
+            "timeToLive": 360,
+            "recipient": "+4799999999",
+            "notificationId": "00000000-0000-0000-0000-000000000000",
+            "message": "Your one-time password is 64ECCD9D valid for an hour"
         }
         """;
 
@@ -137,7 +160,7 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
             Sender = "TestService",
             Recipient = "+4799999999",
             NotificationId = notificationId,
-            Message = "Your one time password is: 2A31519EC7C6",
+            Message = "Your one-time password is: 2A31519EC7C6",
         };
 
         var httpClient = GetTestClient(sendingServiceMock.Object);
@@ -173,4 +196,5 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
             });
         }).CreateClient();
     }
+
 }
