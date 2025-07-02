@@ -43,8 +43,8 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
         var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
 
         Assert.NotNull(problemDetails);
-        Assert.Equal("Invalid instant SMS request", problemDetails.Title);
-        Assert.Equal("The request body cannot be null.", problemDetails.Detail);
+        Assert.Equal(400, problemDetails.Status);
+        Assert.Equal("One or more validation errors occurred.", problemDetails.Title);
     }
 
     [Fact]
