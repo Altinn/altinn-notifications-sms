@@ -6,7 +6,7 @@ using Altinn.Notifications.Sms.Core.Status;
 namespace Altinn.Notifications.Sms.Core.Sending;
 
 /// <summary>
-/// Service responsible for handling sms sending requests.
+/// Service responsible for handling SMS sending requests.
 /// </summary>
 public class SendingService : ISendingService
 {
@@ -17,24 +17,35 @@ public class SendingService : ISendingService
     /// <summary>
     /// Initializes a new instance of the <see cref="SendingService"/> class.
     /// </summary>
-    /// <param name="smsClient">A client that can perform actual sms sending.</param>
-    /// <param name="producer">A kafka producer.</param>
-    /// <param name="settings">The topic settings.</param>
     public SendingService(ISmsClient smsClient, ICommonProducer producer, TopicSettings settings)
     {
-        _smsClient = smsClient;
         _producer = producer;
         _settings = settings;
+        _smsClient = smsClient;
     }
 
     /// <inheritdoc/>
     public async Task SendAsync(Sms sms)
     {
-        Result<string, SmsClientErrorResponse> result = await _smsClient.SendAsync(sms);
+        await ProcessSendResult(sms, await _smsClient.SendAsync(sms));
+    }
 
-        SendOperationResult operationResult = new SendOperationResult
+    /// <inheritdoc/>
+    public async Task SendAsync(Sms sms, int timeToLiveInSeconds)
+    {
+        await ProcessSendResult(sms, await _smsClient.SendAsync(sms, timeToLiveInSeconds));
+    }
+
+    /// <summary>
+    /// Processes the result of the SMS send operation by updating the operation result and publishing the status update.
+    /// </summary>
+    /// <param name="sms">The SMS message that was attempted to be sent.</param>
+    /// <param name="result">The result of the SMS send operation, containing either a gateway reference or an error response.</param>
+    private async Task ProcessSendResult(Sms sms, Result<string, SmsClientErrorResponse> result)
+    {
+        var operationResult = new SendOperationResult
         {
-            NotificationId = sms.NotificationId,
+            NotificationId = sms.NotificationId
         };
 
         await result.Match(
@@ -43,14 +54,23 @@ public class SendingService : ISendingService
                 operationResult.GatewayReference = gatewayReference;
                 operationResult.SendResult = SmsSendResult.Accepted;
 
-                await _producer.ProduceAsync(_settings.SmsStatusUpdatedTopicName, operationResult.Serialize());
+                await PublishStatusUpdate(operationResult);
             },
             async smsSendFailResponse =>
             {
                 operationResult.GatewayReference = string.Empty;
                 operationResult.SendResult = smsSendFailResponse.SendResult;
 
-                await _producer.ProduceAsync(_settings.SmsStatusUpdatedTopicName, operationResult.Serialize());
+                await PublishStatusUpdate(operationResult);
             });
+    }
+
+    /// <summary>
+    /// Publishes the status update for the SMS send operation to the configured topic.
+    /// </summary>
+    /// <param name="operationResult">The result of the SMS send operation to be published.</param>
+    private async Task PublishStatusUpdate(SendOperationResult operationResult)
+    {
+        await _producer.ProduceAsync(_settings.SmsStatusUpdatedTopicName, operationResult.Serialize());
     }
 }
