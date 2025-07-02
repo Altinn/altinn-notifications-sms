@@ -23,11 +23,13 @@ public class SendingServiceTests
     public async Task SendAsync_CustomTimeToLive_GatewayReferenceGenerated_SendingAccepted()
     {
         // Arrange
+        var timeToLiveInSeconds = 5400;
         Guid notificationId = Guid.NewGuid();
+
         Notifications.Sms.Core.Sending.Sms sms = new(notificationId, "sender", "recipient", "message");
 
         Mock<ISmsClient> clientMock = new();
-        clientMock.Setup(c => c.SendAsync(It.IsAny<Notifications.Sms.Core.Sending.Sms>()))
+        clientMock.Setup(c => c.SendAsync(It.IsAny<Notifications.Sms.Core.Sending.Sms>(), timeToLiveInSeconds))
             .ReturnsAsync("457418CB-FFDE-482C-BD53-1E8885CF87EF");
 
         Mock<ICommonProducer> producerMock = new();
@@ -41,7 +43,7 @@ public class SendingServiceTests
         var sendingService = new SendingService(clientMock.Object, producerMock.Object, _topicSettings);
 
         // Act
-        await sendingService.SendAsync(sms, 5400);
+        await sendingService.SendAsync(sms, timeToLiveInSeconds);
 
         // Assert
         producerMock.VerifyAll();
@@ -79,11 +81,12 @@ public class SendingServiceTests
     public async Task SendAsync_CustomTimeToLive_InvalidRecipient_PublishedToExpectedKafkaTopic()
     {
         // Arrange
+        var timeToLiveInSeconds = 12600;
         Guid notificationId = Guid.NewGuid();
         Notifications.Sms.Core.Sending.Sms sms = new(notificationId, "sender", "recipient", "message");
 
         Mock<ISmsClient> clientMock = new();
-        clientMock.Setup(c => c.SendAsync(It.IsAny<Notifications.Sms.Core.Sending.Sms>()))
+        clientMock.Setup(c => c.SendAsync(It.IsAny<Notifications.Sms.Core.Sending.Sms>(), timeToLiveInSeconds))
         .ReturnsAsync(new SmsClientErrorResponse { SendResult = SmsSendResult.Failed_InvalidRecipient, ErrorMessage = "Receiver is invalid" });
 
         Mock<ICommonProducer> producerMock = new();
@@ -96,7 +99,7 @@ public class SendingServiceTests
         var sendingService = new SendingService(clientMock.Object, producerMock.Object, _topicSettings);
 
         // Act
-        await sendingService.SendAsync(sms, 12600);
+        await sendingService.SendAsync(sms, timeToLiveInSeconds);
 
         // Assert
         producerMock.VerifyAll();
