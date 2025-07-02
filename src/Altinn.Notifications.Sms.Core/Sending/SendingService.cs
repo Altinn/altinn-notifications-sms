@@ -6,7 +6,7 @@ using Altinn.Notifications.Sms.Core.Status;
 namespace Altinn.Notifications.Sms.Core.Sending;
 
 /// <summary>
-/// Service responsible for handling SMS sending requests.
+/// Service responsible for sending SMS messages.
 /// </summary>
 public class SendingService : ISendingService
 {
