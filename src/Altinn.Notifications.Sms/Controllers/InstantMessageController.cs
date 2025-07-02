@@ -42,16 +42,6 @@ public class InstantMessageController : ControllerBase
     [SwaggerResponse(499, "The request was canceled before processing could complete.", typeof(ProblemDetails))]
     public async Task<IActionResult> Send([FromBody] InstantMessageRequest request)
     {
-        if (request == null)
-        {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "Invalid instant SMS request",
-                Status = StatusCodes.Status400BadRequest,
-                Detail = "The request body cannot be null."
-            });
-        }
-
         var smsDataModel = MapToSms(request);
 
         try

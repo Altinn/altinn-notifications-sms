@@ -26,28 +26,6 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
     }
 
     [Fact]
-    public async Task Send_NullRequest_ReturnsBadRequest()
-    {
-        // Arrange
-        var sendingServiceMock = new Mock<ISendingService>();
-        var httpClient = GetTestClient(sendingServiceMock.Object);
-        var content = new StringContent("null", Encoding.UTF8, "application/json");
-
-        // Act
-        var response = await httpClient.PostAsync("/notifications/sms/api/v1/instantmessage/send", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-        var responseBody = await response.Content.ReadAsStringAsync();
-        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
-
-        Assert.NotNull(problemDetails);
-        Assert.Equal(400, problemDetails.Status);
-        Assert.Equal("One or more validation errors occurred.", problemDetails.Title);
-    }
-
-    [Fact]
     public async Task Send_WhenRequestIsCanceled_Returns499ClientClosedRequest()
     {
         // Arrange
@@ -79,24 +57,31 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
         Assert.Contains("Request terminated", problemDetails.Title, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact]
-    public async Task Send_WithInvalidSender_ReturnsBadRequestWithValidationError()
+    [Theory]
+    [InlineData("", "", "", "", 0)] // All invalid
+    [InlineData("Altinn", "+4799999999", "", "Valid message", 360)] // Invalid NotificationId
+    [InlineData("Altinn", "+4799999999", "00000000-0000-0000-0000-000000000000", "", 360)] // Invalid Message
+    [InlineData("Altinn", "", "00000000-0000-0000-0000-000000000000", "Valid message", 360)] // Invalid Recipient
+    [InlineData("", "+4799999999", "00000000-0000-0000-0000-000000000000", "Valid message", 360)] // Invalid Sender
+    [InlineData("Altinn", "+4799999999", "00000000-0000-0000-0000-000000000000", "Valid message", 0)] // Invalid TimeToLive (below min)
+    [InlineData("Altinn", "+4799999999", "00000000-0000-0000-0000-000000000000", "Valid message", 172801)] // Invalid TimeToLive (above max)
+    public async Task Send_WithInvalidRequestProperties_ReturnsBadRequestWithValidationError(string sender, string recipient, string notificationId, string message, int timeToLive)
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
         var httpClient = GetTestClient(sendingServiceMock.Object);
 
-        var invalidJson = """
+        var jsonRequest = $$"""
         {
-            "sender": "",
-            "timeToLive": 360,
-            "recipient": "+4799999999",
-            "notificationId": "00000000-0000-0000-0000-000000000000",
-            "message": "Your one-time password is 64ECCD9D valid for an hour"
+           "sender": "{{sender}}",
+           "message": "{{message}}",
+           "timeToLive": {{timeToLive}},
+           "recipient": "{{recipient}}",
+           "notificationId": "{{notificationId}}"
         }
         """;
 
-        var content = new StringContent(invalidJson, Encoding.UTF8, "application/json");
+        var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
 
         // Act
         var response = await httpClient.PostAsync("/notifications/sms/api/v1/instantmessage/send", content);
