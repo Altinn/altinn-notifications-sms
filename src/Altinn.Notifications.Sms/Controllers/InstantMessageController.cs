@@ -8,7 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Altinn.Notifications.Sms.Controllers;
 
 /// <summary>
-/// Controller for sending instant SMS.
+/// Controller for sending instant SMS messages.
 /// </summary>
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
@@ -28,10 +28,7 @@ public class InstantMessageController : ControllerBase
     /// <summary>
     /// Sends a short message instantly to a single recipient.
     /// </summary>
-    /// <param name="request">
-    /// The <see cref="InstantMessageRequest"/> containing the message content, recipient phone number, 
-    /// sender identity, notification order identifier, and time-to-live parameters.
-    /// </param>
+    /// <param name="request">The request containing message content, recipient, sender, notification ID, and time-to-live.</param>
     /// <returns>
     /// Returns 200 (OK) when the SMS was successfully accepted by the service provider.
     /// Returns 400 (Bad Request) with <see cref="ProblemDetails"/> when the request is invalid or contains improper formatting.
@@ -43,18 +40,22 @@ public class InstantMessageController : ControllerBase
     [SwaggerResponse(200, "The SMS was accepted by the service provider.")]
     [SwaggerResponse(400, "The request was invalid.", typeof(ProblemDetails))]
     [SwaggerResponse(499, "The request was canceled before processing could complete.", typeof(ProblemDetails))]
-    public async Task<ActionResult> Send([FromBody] InstantMessageRequest request)
+    public async Task<IActionResult> Send([FromBody] InstantMessageRequest request)
     {
+        if (request == null)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid instant SMS request",
+                Status = StatusCodes.Status400BadRequest,
+                Detail = "The request body cannot be null."
+            });
+        }
+
+        var smsDataModel = MapToSms(request);
+
         try
         {
-            var smsDataModel = new Core.Sending.Sms
-            {
-                Sender = request.Sender,
-                Message = request.Message,
-                Recipient = request.Recipient,
-                NotificationId = request.NotificationId
-            };
-
             await _sendingService.SendAsync(smsDataModel, request.TimeToLive);
 
             return Ok();
@@ -74,8 +75,24 @@ public class InstantMessageController : ControllerBase
             {
                 Title = "Request terminated",
                 Status = StatusCodes.Status499ClientClosedRequest,
-                Detail = "The request was canceled before processing could complete",
+                Detail = "The request was canceled before processing could complete."
             });
         }
+    }
+
+    /// <summary>
+    /// Maps an <see cref="InstantMessageRequest"/> to the <see cref="Core.Sending.Sms"/> domain model.
+    /// </summary>
+    /// <param name="request">The incoming request containing SMS details such as sender, message, recipient, and notification ID.</param>
+    /// <returns>A <see cref="Core.Sending.Sms"/> object populated with values from the request.</returns>
+    private static Core.Sending.Sms MapToSms(InstantMessageRequest request)
+    {
+        return new Core.Sending.Sms
+        {
+            Sender = request.Sender,
+            Message = request.Message,
+            Recipient = request.Recipient,
+            NotificationId = request.NotificationId
+        };
     }
 }
