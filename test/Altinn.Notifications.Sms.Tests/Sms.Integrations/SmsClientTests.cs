@@ -15,8 +15,8 @@ namespace Altinn.Notifications.Sms.Tests.Sms.Integrations
 {
     public class SmsClientTests
     {
+        private readonly Mock<ILogger<SmsClient>> _loggerMock = new();
         private readonly Mock<IAltinnGatewayClient> _clientMock = new();
-        private readonly Mock<ILogger<ISmsClient>> _loggerMock = new();
 
         [Fact]
         public async Task SendAsync_GatewayReturnsNonSuccess_UnknownError()
