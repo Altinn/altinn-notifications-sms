@@ -26,6 +26,20 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
     }
 
     [Fact]
+    public void InstantMessageController_HasApiExplorerSettingsWithIgnoreApiTrue()
+    {
+        // Arrange
+        var controllerType = typeof(Controllers.InstantMessageController);
+
+        // Act
+        var attribute = controllerType.GetCustomAttribute<ApiExplorerSettingsAttribute>();
+
+        // Assert
+        Assert.NotNull(attribute);
+        Assert.True(attribute.IgnoreApi);
+    }
+
+    [Fact]
     public async Task Send_WhenRequestIsCanceled_Returns499ClientClosedRequest()
     {
         // Arrange
@@ -55,6 +69,39 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
         Assert.NotNull(problemDetails);
         Assert.Equal(499, problemDetails.Status);
         Assert.Contains("Request terminated", problemDetails.Title, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Send_WhenSendingServiceFails_ReturnsBadRequest()
+    {
+        // Arrange
+        var notificationId = Guid.NewGuid();
+
+        var sendingServiceMock = new Mock<ISendingService>();
+        sendingServiceMock.Setup(e => e.SendAsync(It.IsAny<Core.Sending.Sms>(), It.IsAny<int>())).ThrowsAsync(new InvalidOperationException());
+
+        var instantMessageRequest = new InstantMessageRequest
+        {
+            TimeToLive = 21600,
+            Sender = "TestService",
+            Recipient = "+4799999999",
+            NotificationId = notificationId,
+            Message = "Your one time password is: 2A31519EC7C6",
+        };
+
+        var httpClient = GetTestClient(sendingServiceMock.Object);
+
+        // Act
+        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/instantmessage/send", instantMessageRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
+
+        Assert.NotNull(problemDetails);
+        Assert.Equal(400, problemDetails.Status);
     }
 
     [Theory]
@@ -98,39 +145,6 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
     }
 
     [Fact]
-    public async Task Send_WhenSendingServiceFails_ReturnsBadRequest()
-    {
-        // Arrange
-        var notificationId = Guid.NewGuid();
-
-        var sendingServiceMock = new Mock<ISendingService>();
-        sendingServiceMock.Setup(e => e.SendAsync(It.IsAny<Core.Sending.Sms>(), It.IsAny<int>())).ThrowsAsync(new InvalidOperationException());
-
-        var instantMessageRequest = new InstantMessageRequest
-        {
-            TimeToLive = 21600,
-            Sender = "TestService",
-            Recipient = "+4799999999",
-            NotificationId = notificationId,
-            Message = "Your one time password is: 2A31519EC7C6",
-        };
-
-        var httpClient = GetTestClient(sendingServiceMock.Object);
-
-        // Act
-        var response = await httpClient.PostAsJsonAsync("/notifications/sms/api/v1/instantmessage/send", instantMessageRequest);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-        var responseBody = await response.Content.ReadAsStringAsync();
-        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(responseBody, _jsonOptions);
-
-        Assert.NotNull(problemDetails);
-        Assert.Equal(400, problemDetails.Status);
-    }
-
-    [Fact]
     public async Task Send_WithValidRequest_ReturnsOk()
     {
         // Arrange
@@ -155,20 +169,6 @@ public class InstantMessageControllerTests : IClassFixture<IntegrationTestWebApp
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Fact]
-    public void OneTimePasswordController_HasApiExplorerSettingsWithIgnoreApiTrue()
-    {
-        // Arrange
-        var controllerType = typeof(Controllers.InstantMessageController);
-
-        // Act
-        var attribute = controllerType.GetCustomAttribute<ApiExplorerSettingsAttribute>();
-
-        // Assert
-        Assert.NotNull(attribute);
-        Assert.True(attribute.IgnoreApi);
     }
 
     private HttpClient GetTestClient(ISendingService sendingService)
