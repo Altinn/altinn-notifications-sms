@@ -6,7 +6,7 @@ namespace Altinn.Notifications.Sms.Core.Sending;
 public interface ISendingService
 {
     /// <summary>
-    /// Sends an SMS message to a specified recipient using the default time-to-live.
+    /// Sends an SMS message to a specified recipient using the default time-to-live (TTL).
     /// </summary>
     /// <param name="sms">An instance of <see cref="Sms"/> containing the message, recipient, sender, and notification ID.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous send operation.</returns>

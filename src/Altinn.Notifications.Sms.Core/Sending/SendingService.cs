@@ -37,10 +37,10 @@ public class SendingService : ISendingService
     }
 
     /// <summary>
-    /// Processes the result of the SMS send operation by updating the operation result and publishing the status update.
+    /// Processes the result of the send operation.
     /// </summary>
     /// <param name="sms">The SMS message that was attempted to be sent.</param>
-    /// <param name="result">The result of the SMS send operation, containing either a gateway reference or an error response.</param>
+    /// <param name="result">The result of the send operation, containing either a gateway reference or an error response.</param>
     private async Task ProcessSendResult(Sms sms, Result<string, SmsClientErrorResponse> result)
     {
         var operationResult = new SendOperationResult
@@ -54,22 +54,22 @@ public class SendingService : ISendingService
                 operationResult.GatewayReference = gatewayReference;
                 operationResult.SendResult = SmsSendResult.Accepted;
 
-                await PublishStatusUpdate(operationResult);
+                await PublishSendResult(operationResult);
             },
             async smsSendFailResponse =>
             {
                 operationResult.GatewayReference = string.Empty;
                 operationResult.SendResult = smsSendFailResponse.SendResult;
 
-                await PublishStatusUpdate(operationResult);
+                await PublishSendResult(operationResult);
             });
     }
 
     /// <summary>
-    /// Publishes the status update for the SMS send operation to the configured topic.
+    /// Publishes the result of the send operation to the configured topic.
     /// </summary>
-    /// <param name="operationResult">The result of the SMS send operation to be published.</param>
-    private async Task PublishStatusUpdate(SendOperationResult operationResult)
+    /// <param name="operationResult">The result of the send operation to be published.</param>
+    private async Task PublishSendResult(SendOperationResult operationResult)
     {
         await _producer.ProduceAsync(_settings.SmsStatusUpdatedTopicName, operationResult.Serialize());
     }
