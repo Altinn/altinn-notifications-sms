@@ -44,7 +44,7 @@ public class SmsClient : ISmsClient
     }
 
     /// <summary>
-    /// Creates a LinkMobility SMS model from the core SMS and time-to-live.
+    /// Creates a <see cref="LinkMobilityModel.Sms"/> model from the core SMS and a time-to-live value.
     /// </summary>
     /// <param name="sms">The core SMS message containing message, recipient, sender, and notification ID.</param>
     /// <param name="timeToLive">The time-to-live for the SMS message.</param>

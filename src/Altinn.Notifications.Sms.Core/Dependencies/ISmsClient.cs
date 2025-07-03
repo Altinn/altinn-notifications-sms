@@ -4,7 +4,7 @@ using Altinn.Notifications.Sms.Core.Shared;
 namespace Altinn.Notifications.Sms.Core.Dependencies;
 
 /// <summary>
-/// Represents a contract for an client that can send text messages using an external SMS service provider.
+/// Represents a contract for a client that can send text messages using an external SMS service provider.
 /// </summary>
 public interface ISmsClient
 {
