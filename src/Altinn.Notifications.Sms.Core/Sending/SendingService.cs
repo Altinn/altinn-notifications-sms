@@ -27,13 +27,17 @@ public class SendingService : ISendingService
     /// <inheritdoc/>
     public async Task SendAsync(Sms sms)
     {
-        await ProcessSendResult(sms, await _smsClient.SendAsync(sms));
+        var result = await _smsClient.SendAsync(sms);
+
+        await ProcessSendResult(sms, result);
     }
 
     /// <inheritdoc/>
     public async Task SendAsync(Sms sms, int timeToLiveInSeconds)
     {
-        await ProcessSendResult(sms, await _smsClient.SendAsync(sms, timeToLiveInSeconds));
+        var result = await _smsClient.SendAsync(sms, timeToLiveInSeconds);
+
+        await ProcessSendResult(sms, result);
     }
 
     /// <summary>
