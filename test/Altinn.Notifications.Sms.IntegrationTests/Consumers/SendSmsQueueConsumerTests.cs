@@ -6,6 +6,9 @@ using Altinn.Notifications.Sms.Integrations.Configuration;
 using Altinn.Notifications.Sms.Integrations.Consumers;
 using Altinn.Notifications.Sms.Integrations.Producers;
 using Altinn.Notifications.Sms.IntegrationTests.Utils;
+
+using Confluent.Kafka;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -30,6 +33,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
                 GroupId = "sms-sending-consumer"
             },
             SendSmsQueueTopicName = _sendSmsQueueTopicName,
+            SendSmsQueueRetryTopicName = _sendSmsQueueRetryTopicName,
             Admin = new()
             {
                 TopicList = new List<string> { _sendSmsQueueTopicName, _sendSmsQueueRetryTopicName }
@@ -90,6 +94,38 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
 
         // Assert
         sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ConsumeSms_SendingServiceThrowsException_MessagePutOnRetryTopic()
+    {
+        // Arrange
+        var sendingServiceMock = new Mock<ISendingService>();
+        var sendMessageException = new Exception("504 Gateway Timeout");
+        sendingServiceMock.Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()))
+            .ThrowsAsync(sendMessageException);
+
+        Core.Sending.Sms sms = new(Guid.NewGuid(), "sender", "recipient", "message");
+        string smsJson = JsonSerializer.Serialize(sms);
+
+        using SendSmsQueueConsumer queueConsumer = GetSmsSendingConsumer(sendingServiceMock.Object);
+        using CommonProducer commonProducer = KafkaUtil.GetKafkaProducer(_serviceProvider!);
+
+        // Act
+        await commonProducer.ProduceAsync(_sendSmsQueueTopicName, smsJson);
+
+        await queueConsumer.StartAsync(CancellationToken.None);
+        await Task.Delay(5000); // Give time for processing and retry
+        await queueConsumer.StopAsync(CancellationToken.None);
+
+        // Assert
+        sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Once);
+
+        // Verify message was put on retry topic
+        using var retryConsumer = GetTestRetryConsumer();
+        var retryMessage = retryConsumer.Consume(TimeSpan.FromSeconds(5));
+        Assert.NotNull(retryMessage);
+        Assert.Equal(smsJson, retryMessage.Message.Value);
     }
 
     private SendSmsQueueConsumer GetSmsSendingConsumer(ISendingService sendingService)
