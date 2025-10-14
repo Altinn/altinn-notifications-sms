@@ -112,4 +112,20 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
 
         return smsSendingConsumer;
     }
+
+    private IConsumer<string, string> GetTestRetryConsumer()
+    {
+        var consumerConfig = new ConsumerConfig
+        {
+            BootstrapServers = "localhost:9092",
+            GroupId = $"test-retry-consumer-{Guid.NewGuid()}",
+            AutoOffsetReset = AutoOffsetReset.Earliest,
+            EnableAutoCommit = false
+        };
+
+        var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
+        consumer.Subscribe(_sendSmsQueueRetryTopicName);
+
+        return consumer;
+    }
 }
