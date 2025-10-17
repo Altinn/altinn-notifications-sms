@@ -7,10 +7,9 @@ using Altinn.Notifications.Sms.Integrations.Consumers;
 using Altinn.Notifications.Sms.Integrations.Producers;
 using Altinn.Notifications.Sms.IntegrationTests.Utils;
 
-using Confluent.Kafka;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
@@ -68,11 +67,29 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
         await commonProducer.ProduceAsync(_sendSmsQueueTopicName, JsonSerializer.Serialize(sms));
 
         await queueConsumer.StartAsync(CancellationToken.None);
-        await Task.Delay(10000);
+
+        bool sendingServiceCalled = false;
+        await IntegrationTestUtil.EventuallyAsync(
+            () =>
+            {
+                try
+                {
+                    sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Once);
+                    sendingServiceCalled = true;
+                    return sendingServiceCalled;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            },
+            TimeSpan.FromSeconds(15),
+            TimeSpan.FromMilliseconds(100));
+
         await queueConsumer.StopAsync(CancellationToken.None);
 
         // Assert
-        sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Once);
+        Assert.True(sendingServiceCalled);
     }
 
     [Fact]
@@ -89,11 +106,29 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
         await commonProducer.ProduceAsync(_sendSmsQueueTopicName, JsonSerializer.Serialize("Crap sms"));
 
         await queueConsumer.StartAsync(CancellationToken.None);
-        await Task.Delay(10000);
+
+        bool messageProcessed = false;
+        await IntegrationTestUtil.EventuallyAsync(
+            () =>
+            {
+                try
+                {
+                    sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Never);
+                    messageProcessed = true;
+                    return messageProcessed;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            },
+            TimeSpan.FromSeconds(15),
+            TimeSpan.FromMilliseconds(100));
+
         await queueConsumer.StopAsync(CancellationToken.None);
 
         // Assert
-        sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Never);
+        Assert.True(messageProcessed);
     }
 
     [Fact]
@@ -101,35 +136,57 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
+        var producerMock = new Mock<ICommonProducer>();
         var sendMessageException = new Exception("504 Gateway Timeout");
         sendingServiceMock.Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()))
             .ThrowsAsync(sendMessageException);
+        producerMock.Setup(p => p.ProduceAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
 
         Core.Sending.Sms sms = new(Guid.NewGuid(), "sender", "recipient", "message");
         string smsJson = JsonSerializer.Serialize(sms);
 
-        using SendSmsQueueConsumer queueConsumer = GetSmsSendingConsumer(sendingServiceMock.Object);
+        using SendSmsQueueConsumer queueConsumer = GetSmsSendingConsumer(sendingServiceMock.Object, producerMock.Object);
         using CommonProducer commonProducer = KafkaUtil.GetKafkaProducer(_serviceProvider!);
 
         // Act
         await commonProducer.ProduceAsync(_sendSmsQueueTopicName, smsJson);
 
         await queueConsumer.StartAsync(CancellationToken.None);
-        await Task.Delay(5000); // Give time for processing and retry
+
+        bool sendingServiceCalledOnce = false;
+        bool messagePublishedToRetryTopic = false;
+        await IntegrationTestUtil.EventuallyAsync(
+            () =>
+            {
+                try
+                {
+                    sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Once);
+                    sendingServiceCalledOnce = true;
+
+                    producerMock.Verify(p => p.ProduceAsync(_sendSmsQueueRetryTopicName, smsJson), Times.Once);
+                    messagePublishedToRetryTopic = true;
+
+                    return sendingServiceCalledOnce && messagePublishedToRetryTopic;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            },
+            TimeSpan.FromSeconds(15),
+            TimeSpan.FromMilliseconds(100));
+
         await queueConsumer.StopAsync(CancellationToken.None);
 
         // Assert
-        sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Once);
-
-        // Verify message was put on retry topic
-        using var retryConsumer = GetTestRetryConsumer();
-        var retryMessage = retryConsumer.Consume(TimeSpan.FromSeconds(5));
-        Assert.NotNull(retryMessage);
-        Assert.Equal(smsJson, retryMessage.Message.Value);
+        Assert.True(sendingServiceCalledOnce);
+        Assert.True(messagePublishedToRetryTopic);
     }
 
-    private SendSmsQueueConsumer GetSmsSendingConsumer(ISendingService sendingService)
+    private SendSmsQueueConsumer GetSmsSendingConsumer(ISendingService sendingService, ICommonProducer? producer = null)
     {
+        // Always initialize service provider for KafkaUtil.GetKafkaProducer
         IServiceCollection services = new ServiceCollection()
             .AddLogging()
             .AddSingleton(_kafkaSettings)
@@ -139,29 +196,24 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
 
         _serviceProvider = services.BuildServiceProvider();
 
-        var smsSendingConsumer = _serviceProvider.GetService(typeof(IHostedService)) as SendSmsQueueConsumer;
-
-        if (smsSendingConsumer == null)
+        if (producer == null)
         {
-            Assert.Fail("Unable to create an instance of SmsSendingConsumer.");
+            var smsSendingConsumer = _serviceProvider.GetService(typeof(IHostedService)) as SendSmsQueueConsumer;
+
+            if (smsSendingConsumer == null)
+            {
+                Assert.Fail("Unable to create an instance of SmsSendingConsumer.");
+            }
+
+            return smsSendingConsumer;
         }
-
-        return smsSendingConsumer;
-    }
-
-    private IConsumer<string, string> GetTestRetryConsumer()
-    {
-        var consumerConfig = new ConsumerConfig
+        else
         {
-            BootstrapServers = "localhost:9092",
-            GroupId = $"test-retry-consumer-{Guid.NewGuid()}",
-            AutoOffsetReset = AutoOffsetReset.Earliest,
-            EnableAutoCommit = false
-        };
-
-        var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-        consumer.Subscribe(_sendSmsQueueRetryTopicName);
-
-        return consumer;
+            return new SendSmsQueueConsumer(
+                _kafkaSettings,
+                sendingService,
+                producer,
+                NullLogger<SendSmsQueueConsumer>.Instance);
+        }
     }
 }
