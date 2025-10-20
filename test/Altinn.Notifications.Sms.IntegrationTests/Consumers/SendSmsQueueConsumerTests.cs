@@ -52,7 +52,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ConsumeSms_SendingServiceCalledOnce_Success()
+    public async Task ConsumeSms_ValidMessage_SendingServiceInvoked()
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
@@ -93,7 +93,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ConsumeSms_InvalidSms_SendingServiceNeverCalled_Fail()
+    public async Task ConsumeSms_InvalidSms_SendingServiceNeverCalled()
     {
         // Arrange
         var sendingServiceMock = new Mock<ISendingService>();
@@ -107,15 +107,15 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
 
         await queueConsumer.StartAsync(CancellationToken.None);
 
-        bool messageProcessed = false;
+        bool sendingServiceNeverInvoked = false;
         await IntegrationTestUtil.EventuallyAsync(
             () =>
             {
                 try
                 {
                     sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Never);
-                    messageProcessed = true;
-                    return messageProcessed;
+                    sendingServiceNeverInvoked = true;
+                    return sendingServiceNeverInvoked;
                 }
                 catch (Exception)
                 {
@@ -128,7 +128,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
         await queueConsumer.StopAsync(CancellationToken.None);
 
         // Assert
-        Assert.True(messageProcessed);
+        Assert.True(sendingServiceNeverInvoked);
     }
 
     [Fact]
