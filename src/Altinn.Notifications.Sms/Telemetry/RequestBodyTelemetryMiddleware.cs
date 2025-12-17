@@ -3,9 +3,6 @@ using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
-using Altinn.Notifications.Sms.Core.Status;
-using LinkMobility.PSWin.Receiver.Model;
-
 namespace Altinn.Notifications.Sms.Telemetry;
 
 /// <summary>
@@ -16,6 +13,7 @@ namespace Altinn.Notifications.Sms.Telemetry;
 public class RequestBodyTelemetryMiddleware(RequestDelegate next)
 {
     private readonly RequestDelegate _next = next;
+    private const string DeliveryReportPath = "/notifications/sms/api/v1/reports";
 
     /// <summary>
     /// Processes the HTTP request to extract and log SMS delivery report telemetry data.
@@ -29,66 +27,87 @@ public class RequestBodyTelemetryMiddleware(RequestDelegate next)
     /// </remarks>
     public async Task InvokeAsync(HttpContext context)
     {
-        // Check if it's a POST request
         if (context.Request.Method == HttpMethods.Post)
         {
-            // Allow the body to be read multiple times (rewindable)
-            context.Request.EnableBuffering();
-
-            // Leave the body stream open after reading
-            using var reader = new StreamReader(
-                context.Request.Body,
-                Encoding.UTF8,
-                detectEncodingFromByteOrderMarks: false,
-                bufferSize: 1024,
-                leaveOpen: true);
-            var body = await reader.ReadToEndAsync();
-
-            // Reset the stream's position to 0 so the next middleware/controller can read it
-            context.Request.Body.Position = 0;
-
-            // Check if this is a delivery report request
-            if (context.Request.Path.StartsWithSegments("/notifications/sms/api/v1/reports") && !string.IsNullOrWhiteSpace(body))
+            var body = await ReadRequestBodyAsync(context);
+            
+            if (IsDeliveryReportRequest(context, body))
             {
-                try
-                {
-                    // Parse the XML delivery report
-                    var doc = XDocument.Parse(body);
-                    var msgElement = doc.Root?.Element("MSG");
-                    var id = msgElement?.Element("ID")?.Value;
-                    var reference = msgElement?.Element("REF")?.Value;
-                    var stateString = msgElement?.Element("STATE")?.Value;
-
-                    // Parse the delivery state
-                    if (!string.IsNullOrEmpty(stateString) && Enum.TryParse<DeliveryState>(stateString, out var deliveryState))
-                    {
-                        var mappedResult = SmsSendResultMapper.ParseDeliveryState(deliveryState);
-
-                        // Add telemetry tags to the current activity
-                        var activity = Activity.Current;
-                        if (activity != null && !string.IsNullOrEmpty(id))
-                        {
-                            var sendOperationResult = new SendOperationResult
-                            {
-                                SendResult = mappedResult,
-                                GatewayReference = reference ?? string.Empty
-                            };
-
-                            if (!string.IsNullOrEmpty(reference))
-                            {
-                                activity.SetTag("sendOperationResult", JsonSerializer.Serialize(sendOperationResult));
-                            }
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // Silently ignore parsing errors - the controller will handle validation
-                }
+                ProcessDeliveryReportTelemetry(body);
             }
         }
 
-        // Continue to the next middleware in the pipeline
         await _next(context);
+    }
+
+    private static async Task<string> ReadRequestBodyAsync(HttpContext context)
+    {
+        context.Request.EnableBuffering();
+
+        using var reader = new StreamReader(
+            context.Request.Body,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: false,
+            bufferSize: 1024,
+            leaveOpen: true);
+
+        var body = await reader.ReadToEndAsync();
+        context.Request.Body.Position = 0;
+
+        return body;
+    }
+
+    private static bool IsDeliveryReportRequest(HttpContext context, string body)
+    {
+        return context.Request.Path.StartsWithSegments(DeliveryReportPath) 
+               && !string.IsNullOrWhiteSpace(body);
+    }
+
+    private static void ProcessDeliveryReportTelemetry(string body)
+    {
+        try
+        {
+            var deliveryData = ParseDeliveryReportXml(body);
+            if (deliveryData != null)
+            {
+                AddTelemetryTag(deliveryData);
+            }
+        }
+        catch (Exception)
+        {
+            // Silently ignore parsing errors - the controller will handle validation
+        }
+    }
+
+    private static Dictionary<string, string>? ParseDeliveryReportXml(string xml)
+    {
+        var doc = XDocument.Parse(xml);
+        var msgElement = doc.Root?.Element("MSG");
+        
+        if (msgElement == null)
+        {
+            return null;
+        }
+
+        var deliveryData = new Dictionary<string, string>();
+        foreach (var element in from element in msgElement.Elements()
+                                where !string.IsNullOrEmpty(element.Value)
+                                select element)
+        {
+            deliveryData[element.Name.LocalName] = element.Value;
+        }
+
+        return deliveryData.Count > 0 ? deliveryData : null;
+    }
+
+    private static void AddTelemetryTag(Dictionary<string, string> deliveryData)
+    {
+        var activity = Activity.Current;
+        if (activity == null)
+        {
+            return;
+        }
+
+        activity.SetTag("DeliveryReports", JsonSerializer.Serialize(deliveryData));
     }
 }
