@@ -42,8 +42,7 @@ appBuilder.Services.AddSwaggerGen(c =>
 
 var app = appBuilder.Build();
 
-SmsDeliveryReportSettings smsDeliveryReportSettings = new();
-app.Configuration.GetSection("SmsDeliveryReportSettings").Bind(smsDeliveryReportSettings);
+var smsDeliveryReportSettings = app.Services.GetRequiredService<SmsDeliveryReportSettings>();
 if (smsDeliveryReportSettings.LogDeliveryReportsToApplicationInsights)
 {
     app.UseMiddleware<RequestBodyTelemetryMiddleware>();
