@@ -42,7 +42,14 @@ public class RequestBodyTelemetryMiddleware(RequestDelegate next)
 
     private static async Task<string> ReadRequestBodyAsync(HttpContext context)
     {
+        const int MaxBodySize = 1024 * 1024; // 1 MB limit
+        
         context.Request.EnableBuffering();
+
+        if (context.Request.ContentLength > MaxBodySize)
+        {
+            return string.Empty;
+        }
 
         using var reader = new StreamReader(
             context.Request.Body,
