@@ -14,6 +14,7 @@ public class RequestBodyTelemetryMiddleware(RequestDelegate next)
 {
     private readonly RequestDelegate _next = next;
     private const string DeliveryReportPath = "/notifications/sms/api/v1/reports";
+    private const string ReceiverFieldName = "RCV";
 
     /// <summary>
     /// Processes the HTTP request to extract and log SMS delivery report telemetry data.
@@ -95,10 +96,24 @@ public class RequestBodyTelemetryMiddleware(RequestDelegate next)
                                 where !string.IsNullOrEmpty(element.Value)
                                 select element)
         {
-            deliveryData[element.Name.LocalName] = element.Value;
+            var value = element.Name.LocalName == ReceiverFieldName 
+                ? MaskPhoneNumber(element.Value) 
+                : element.Value;
+            
+            deliveryData[element.Name.LocalName] = value;
         }
 
         return deliveryData.Count > 0 ? deliveryData : null;
+    }
+
+    private static string MaskPhoneNumber(string phoneNumber)
+    {
+        if (string.IsNullOrEmpty(phoneNumber) || phoneNumber.Length <= 4)
+        {
+            return "******";
+        }
+
+        return "******" + phoneNumber[6..];
     }
 
     private static void AddTelemetryTag(Dictionary<string, string> deliveryData)
