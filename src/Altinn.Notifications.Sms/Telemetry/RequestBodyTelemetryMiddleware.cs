@@ -27,11 +27,11 @@ public class RequestBodyTelemetryMiddleware(RequestDelegate next)
     /// </remarks>
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context.Request.Method == HttpMethods.Post)
+        if (context.Request.Method == HttpMethods.Post && context.Request.Path.StartsWithSegments(DeliveryReportPath))
         {
             var body = await ReadRequestBodyAsync(context);
             
-            if (IsDeliveryReportRequest(context, body))
+            if (!string.IsNullOrWhiteSpace(body))
             {
                 ProcessDeliveryReportTelemetry(body);
             }
@@ -55,12 +55,6 @@ public class RequestBodyTelemetryMiddleware(RequestDelegate next)
         context.Request.Body.Position = 0;
 
         return body;
-    }
-
-    private static bool IsDeliveryReportRequest(HttpContext context, string body)
-    {
-        return context.Request.Path.StartsWithSegments(DeliveryReportPath) 
-               && !string.IsNullOrWhiteSpace(body);
     }
 
     private static void ProcessDeliveryReportTelemetry(string body)
