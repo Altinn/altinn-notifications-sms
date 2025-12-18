@@ -108,7 +108,7 @@ public class RequestBodyTelemetryMiddleware(RequestDelegate next)
 
     private static string MaskPhoneNumber(string phoneNumber)
     {
-        if (string.IsNullOrEmpty(phoneNumber) || phoneNumber.Length <= 4)
+        if (string.IsNullOrEmpty(phoneNumber) || phoneNumber.Length < 6)
         {
             return "******";
         }
