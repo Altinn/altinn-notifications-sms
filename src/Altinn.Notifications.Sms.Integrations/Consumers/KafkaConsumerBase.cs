@@ -85,9 +85,17 @@ public abstract class KafkaConsumerBase : BackgroundService
                     _consumer.StoreOffset(consumeResult);
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
-                // Expected when cancellationToken is canceled
+                if (ex is TaskCanceledException)
+                {
+                    _logger.LogWarning("// {Class} // ConsumeMessage // TaskCanceledException was thrown", GetType().Name);
+                }
+                else
+                {
+                    // Expected when cancellationToken is canceled
+                    _logger.LogInformation("// {Class} // ConsumeMessage // Other OperationCanceledException was thrown", GetType().Name);
+                }
             }
             catch (Exception ex)
             {
