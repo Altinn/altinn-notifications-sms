@@ -234,13 +234,14 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
 
         // Assert
         // Cannot verify extension methods directly (LogWarning). Verify the underlying ILogger.Log call instead.
+        // Note: ToString() is called here, but this is in test code and the expression tree limitation prevents caching
         loggerMock.Verify(
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("TaskCanceledException was thrown")),
+                It.Is<It.IsAnyType>((v, t) => v != null && v.ToString()!.Contains("TaskCanceledException was thrown")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
 
         Assert.True(sendingServiceCalledOnce);
