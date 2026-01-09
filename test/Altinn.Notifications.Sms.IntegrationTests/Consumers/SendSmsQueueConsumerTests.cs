@@ -1,4 +1,5 @@
-﻿using Altinn.Notifications.Sms.Core.Dependencies;
+﻿using System.Text.Json;
+using Altinn.Notifications.Sms.Core.Dependencies;
 using Altinn.Notifications.Sms.Core.Sending;
 using Altinn.Notifications.Sms.Integrations.Configuration;
 using Altinn.Notifications.Sms.Integrations.Consumers;
@@ -9,7 +10,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using System.Text.Json;
 
 namespace Altinn.Notifications.Sms.IntegrationTests.Consumers;
 
