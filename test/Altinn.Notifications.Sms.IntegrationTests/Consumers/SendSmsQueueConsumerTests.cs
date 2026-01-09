@@ -220,7 +220,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
                     producerMock.Verify(p => p.ProduceAsync(_sendSmsQueueRetryTopicName, smsJson), Times.Never);
                     messagePublishedToRetryTopic = false;
 
-                    return sendingServiceCalledOnce && messagePublishedToRetryTopic;
+                    return sendingServiceCalledOnce;
                 }
                 catch (Exception)
                 {
