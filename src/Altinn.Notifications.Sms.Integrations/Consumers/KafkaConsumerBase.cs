@@ -89,6 +89,8 @@ public abstract class KafkaConsumerBase : BackgroundService
             {
                 if (ex is TaskCanceledException)
                 {
+                    // We expect this exception when a call to Link mobility takes more than 100 seconds and is cancelled by the http client timeout. 
+                    // This may lead to notifications being stuck in "Sending" state. We should investigate a better way to handle this.
                     _logger.LogWarning("// {Class} // ConsumeMessage // TaskCanceledException was thrown", GetType().Name);
                 }
                 else
