@@ -240,7 +240,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, t) => v != null && v.ToString()!.Contains("TaskCanceledException was thrown")),
-                It.IsAny<Exception>(),
+                It.IsAny<TaskCanceledException>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
 
