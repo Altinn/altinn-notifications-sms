@@ -1,17 +1,15 @@
-﻿using System.Text.Json;
-
-using Altinn.Notifications.Sms.Core.Dependencies;
+﻿using Altinn.Notifications.Sms.Core.Dependencies;
 using Altinn.Notifications.Sms.Core.Sending;
 using Altinn.Notifications.Sms.Integrations.Configuration;
 using Altinn.Notifications.Sms.Integrations.Consumers;
 using Altinn.Notifications.Sms.Integrations.Producers;
 using Altinn.Notifications.Sms.IntegrationTests.Utils;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-
 using Moq;
+using System.Text.Json;
 
 namespace Altinn.Notifications.Sms.IntegrationTests.Consumers;
 
@@ -184,7 +182,72 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
         Assert.True(messagePublishedToRetryTopic);
     }
 
-    private SendSmsQueueConsumer GetSmsSendingConsumer(ISendingService sendingService, ICommonProducer? producer = null)
+    [Fact]
+    public async Task ConsumeSms_SendingServiceThrowsTaskCanceledException_Logged()
+    {
+        // Arrange
+        var sendingServiceMock = new Mock<ISendingService>();
+        var producerMock = new Mock<ICommonProducer>();
+        var loggerMock = new Mock<ILogger<SendSmsQueueConsumer>>();
+
+        var sendMessageException = new TaskCanceledException("Took too much time");
+        sendingServiceMock.Setup(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()))
+            .ThrowsAsync(sendMessageException);
+        producerMock.Setup(p => p.ProduceAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
+
+        Core.Sending.Sms sms = new(Guid.NewGuid(), "sender", "recipient", "message");
+        string smsJson = JsonSerializer.Serialize(sms);
+
+        using SendSmsQueueConsumer queueConsumer = GetSmsSendingConsumer(sendingServiceMock.Object, producerMock.Object, loggerMock.Object);
+        using CommonProducer commonProducer = KafkaUtil.GetKafkaProducer(_serviceProvider!);
+
+        // Act
+        await commonProducer.ProduceAsync(_sendSmsQueueTopicName, smsJson);
+
+        await queueConsumer.StartAsync(CancellationToken.None);
+
+        bool sendingServiceCalledOnce = false;
+        bool messagePublishedToRetryTopic = false;
+        await IntegrationTestUtil.EventuallyAsync(
+            () =>
+            {
+                try
+                {
+                    sendingServiceMock.Verify(s => s.SendAsync(It.IsAny<Core.Sending.Sms>()), Times.Once);
+                    sendingServiceCalledOnce = true;
+
+                    producerMock.Verify(p => p.ProduceAsync(_sendSmsQueueRetryTopicName, smsJson), Times.Never);
+                    messagePublishedToRetryTopic = false;
+
+                    return sendingServiceCalledOnce && messagePublishedToRetryTopic;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            },
+            TimeSpan.FromSeconds(15),
+            TimeSpan.FromMilliseconds(100));
+
+        await queueConsumer.StopAsync(CancellationToken.None);
+
+        // Assert
+        // Cannot verify extension methods directly (LogWarning). Verify the underlying ILogger.Log call instead.
+        loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("TaskCanceledException was thrown")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+            Times.Once);
+
+        Assert.True(sendingServiceCalledOnce);
+        Assert.False(messagePublishedToRetryTopic);
+    }
+
+    private SendSmsQueueConsumer GetSmsSendingConsumer(ISendingService sendingService, ICommonProducer? producer = null, ILogger<SendSmsQueueConsumer>? logger = null)
     {
         // Always initialize service provider for KafkaUtil.GetKafkaProducer
         IServiceCollection services = new ServiceCollection()
@@ -195,6 +258,8 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
             .AddHostedService<SendSmsQueueConsumer>();
 
         _serviceProvider = services.BuildServiceProvider();
+
+        logger ??= NullLogger<SendSmsQueueConsumer>.Instance;
 
         if (producer == null)
         {
@@ -213,7 +278,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
                 _kafkaSettings,
                 sendingService,
                 producer,
-                NullLogger<SendSmsQueueConsumer>.Instance);
+                logger);
         }
     }
 }
