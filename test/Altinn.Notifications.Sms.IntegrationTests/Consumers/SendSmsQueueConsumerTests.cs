@@ -208,7 +208,7 @@ public class SendSmsQueueConsumerTests : IAsyncLifetime
         await queueConsumer.StartAsync(CancellationToken.None);
 
         bool sendingServiceCalledOnce = false;
-        bool messagePublishedToRetryTopic = false;
+        bool? messagePublishedToRetryTopic = null;
         await IntegrationTestUtil.EventuallyAsync(
             () =>
             {
