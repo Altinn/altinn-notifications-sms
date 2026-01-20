@@ -98,7 +98,7 @@ public abstract class KafkaConsumerBase : BackgroundService
                 else
                 {
                     // Expected when cancellationToken is canceled
-                    _logger.LogInformation(ex, "// {Class} // ConsumeMessage // Other OperationCanceledException was thrown", _className);
+                    _logger.LogInformation("// {Class} // ConsumeMessage // Other OperationCanceledException was thrown", _className);
                 }
             }
             catch (Exception ex)
