@@ -1,3 +1,11 @@
+# ⚠️ This Repository Has Been Archived
+
+**This repository is no longer being maintained.**
+
+The application in this repository has been moved into the Altinn Notifications repository and can be found at: [`components/sms-service`](https://github.com/Altinn/altinn-notifications/tree/main/components/sms-service).
+
+---
+
 # altinn-notifications-sms
 
 This component handles the functionality related to sending an sms through Altinn Notifications.
